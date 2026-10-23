@@ -3,85 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOI4 Mod 国策树编辑器 - 免费版</title>
+    <title>HOI4 Mod 编辑器 - 免费版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 30px; color: #e94560; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #e94560; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab { padding: 10px 20px; background: #16213e; border-radius: 5px; cursor: pointer; }
+        .tab.active { background: #e94560; }
+        .panel { display: none; }
+        .panel.active { display: block; }
         .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .panel { background: #16213e; padding: 20px; border-radius: 10px; }
-        .panel h2 { margin-bottom: 15px; color: #0f3460; background: #e94560; padding: 5px 10px; border-radius: 5px; }
+        .box { background: #16213e; padding: 20px; border-radius: 10px; }
+        .box h2 { margin-bottom: 15px; color: #fff; background: #0f3460; padding: 5px 10px; border-radius: 5px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #aaa; }
         input, textarea, select { width: 100%; padding: 8px; border: none; border-radius: 5px; background: #0f3460; color: #fff; font-size: 14px; }
-        textarea { height: 100px; resize: vertical; }
-        button { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        textarea { height: 80px; resize: vertical; }
+        button { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px; margin-bottom: 10px; }
         button:hover { background: #c73650; }
         button.secondary { background: #0f3460; }
         pre { background: #0d1b2a; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
-        .focus-item { background: #0f3460; padding: 10px; margin-bottom: 10px; border-radius: 5px; cursor: pointer; }
-        .focus-item:hover { background: #1a4a7a; }
+        .item { background: #0f3460; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>HOI4 Mod 国策树编辑器</h1>
-        <div class="editor">
-            <div class="panel">
-                <h2>添加国策</h2>
-                <div class="form-group">
-                    <label>国策ID</label>
-                    <input type="text" id="focusId" placeholder="例如 SOV_red_camouflage_1">
+        <h1>HOI4 Mod 编辑器 - 免费版</h1>
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('focus')">国策树</div>
+            <div class="tab" onclick="showTab('event')">事件</div>
+            <div class="tab" onclick="showTab('idea')">理念</div>
+            <div class="tab" onclick="showTab('loc')">本地化</div>
+        </div>
+
+        <!-- 国策树编辑器 -->
+        <div id="focus" class="panel active">
+            <div class="editor">
+                <div class="box">
+                    <h2>添加国策</h2>
+                    <div class="form-group">
+                        <label>国策ID</label>
+                        <input type="text" id="focusId" placeholder="例如 SOV_red_camouflage_1">
+                    </div>
+                    <div class="form-group">
+                        <label>国策名字</label>
+                        <input type="text" id="focusName" placeholder="例如 秘密会议">
+                    </div>
+                    <div class="form-group">
+                        <label>成本（天数）</label>
+                        <input type="number" id="focusCost" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label>前置国策ID（可选）</label>
+                        <input type="text" id="focusPrereq" placeholder="前置国策的ID">
+                    </div>
+                    <div class="form-group">
+                        <label>效果（每行一条）</label>
+                        <textarea id="focusEffect" placeholder="例如 political_power = 150"></textarea>
+                    </div>
+                    <button onclick="addFocus()">添加国策</button>
+                    <button class="secondary" onclick="downloadCode('focus')">下载国策文件</button>
+                    <h2 style="margin-top:20px;">已添加的国策</h2>
+                    <div id="focusList"></div>
                 </div>
-                <div class="form-group">
-                    <label>国策名字</label>
-                    <input type="text" id="focusName" placeholder="例如 秘密会议">
+                <div class="box">
+                    <h2>生成的代码</h2>
+                    <pre id="focusCode">// 生成的国策树代码会显示在这里</pre>
                 </div>
-                <div class="form-group">
-                    <label>国策描述</label>
-                    <textarea id="focusDesc" placeholder="输入国策描述..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>成本（天数）</label>
-                    <input type="number" id="focusCost" value="10">
-                </div>
-                <div class="form-group">
-                    <label>前置国策ID（可选）</label>
-                    <input type="text" id="focusPrereq" placeholder="前置国策的ID">
-                </div>
-                <div class="form-group">
-                    <label>效果</label>
-                    <textarea id="focusEffect" placeholder="例如 political_power = 150"></textarea>
-                </div>
-                <button onclick="addFocus()">添加国策</button>
-                <button class="secondary" onclick="generateCode()">生成代码</button>
-                <button class="secondary" onclick="downloadCode()">下载文件</button>
-                <h2 style="margin-top: 30px;">已添加的国策</h2>
-                <div id="focusList"></div>
             </div>
-            <div class="panel">
-                <h2>生成的代码</h2>
-                <pre id="codeOutput">// 生成的国策树代码会显示在这里</pre>
+        </div>
+
+        <!-- 事件编辑器 -->
+        <div id="event" class="panel">
+            <div class="editor">
+                <div class="box">
+                    <h2>添加事件</h2>
+                    <div class="form-group">
+                        <label>事件ID</label>
+                        <input type="text" id="eventId" placeholder="例如 SOV_red_camouflage.1">
+                    </div>
+                    <div class="form-group">
+                        <label>事件标题</label>
+                        <input type="text" id="eventTitle" placeholder="例如 联合国大会">
+                    </div>
+                    <div class="form-group">
+                        <label>事件描述</label>
+                        <textarea id="eventDesc" placeholder="输入事件描述..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>选项1文字</label>
+                        <input type="text" id="eventOpt1" placeholder="例如 同志们，我们回来了">
+                    </div>
+                    <div class="form-group">
+                        <label>选项1效果（每行一条）</label>
+                        <textarea id="eventEffect1" placeholder="例如 political_power = 500"></textarea>
+                    </div>
+                    <button onclick="addEvent()">添加事件</button>
+                    <button class="secondary" onclick="downloadCode('event')">下载事件文件</button>
+                    <h2 style="margin-top:20px;">已添加的事件</h2>
+                    <div id="eventList"></div>
+                </div>
+                <div class="box">
+                    <h2>生成的代码</h2>
+                    <pre id="eventCode">// 生成的事件代码会显示在这里</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 理念编辑器 -->
+        <div id="idea" class="panel">
+            <div class="editor">
+                <div class="box">
+                    <h2>添加理念</h2>
+                    <div class="form-group">
+                        <label>理念ID</label>
+                        <input type="text" id="ideaId" placeholder="例如 SOV_red_camouflage_idea">
+                    </div>
+                    <div class="form-group">
+                        <label>理念名字</label>
+                        <input type="text" id="ideaName" placeholder="例如 苏联重生">
+                    </div>
+                    <div class="form-group">
+                        <label>理念描述</label>
+                        <textarea id="ideaDesc" placeholder="输入理念描述..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>修正（每行一条）</label>
+                        <textarea id="ideaMod" placeholder="例如 stability_factor = 0.1"></textarea>
+                    </div>
+                    <button onclick="addIdea()">添加理念</button>
+                    <button class="secondary" onclick="downloadCode('idea')">下载理念文件</button>
+                    <h2 style="margin-top:20px;">已添加的理念</h2>
+                    <div id="ideaList"></div>
+                </div>
+                <div class="box">
+                    <h2>生成的代码</h2>
+                    <pre id="ideaCode">// 生成的理念代码会显示在这里</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本地化编辑器 -->
+        <div id="loc" class="panel">
+            <div class="editor">
+                <div class="box">
+                    <h2>添加本地化</h2>
+                    <div class="form-group">
+                        <label>键名</label>
+                        <input type="text" id="locKey" placeholder="例如 SOV_red_camouflage_1">
+                    </div>
+                    <div class="form-group">
+                        <label>中文内容</label>
+                        <input type="text" id="locValue" placeholder="例如 秘密会议">
+                    </div>
+                    <button onclick="addLoc()">添加本地化</button>
+                    <button class="secondary" onclick="downloadCode('loc')">下载本地化文件</button>
+                    <h2 style="margin-top:20px;">已添加的本地化</h2>
+                    <div id="locList"></div>
+                </div>
+                <div class="box">
+                    <h2>生成的代码</h2>
+                    <pre id="locCode"># 红色伪装 mod - 本地化文件
+l_simp_chinese:</pre>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let focuses = [];
+        let events = [];
+        let ideas = [];
+        let locs = [];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        // 国策树
         function addFocus() {
             const id = document.getElementById('focusId').value.trim();
             const name = document.getElementById('focusName').value.trim();
-            const desc = document.getElementById('focusDesc').value.trim();
             const cost = document.getElementById('focusCost').value;
             const prereq = document.getElementById('focusPrereq').value.trim();
             const effect = document.getElementById('focusEffect').value.trim();
             if (!id || !name) { alert('请填写国策ID和名字'); return; }
-            focuses.push({ id, name, desc, cost, prereq, effect });
-            document.getElementById('focusList').innerHTML += `<div class="focus-item">${name} (${id})</div>`;
-            generateCode();
+            focuses.push({ id, name, cost, prereq, effect });
+            document.getElementById('focusList').innerHTML += `<div class="item">${name} (${id})</div>`;
+            genFocusCode();
         }
-        function generateCode() {
+        function genFocusCode() {
             let code = 'focus_tree = {\n';
             code += '\tname = "Custom_Focus_Tree"\n';
             code += '\tcountry = { factor = 1 }\n';
@@ -90,30 +206,89 @@
                 code += `\tfocus = {\n`;
                 code += `\t\tid = ${f.id}\n`;
                 code += `\t\ticon = generic_intelligence\n`;
-                if (f.prereq) {
-                    code += `\t\tprerequisite = { focus = ${f.prereq} }\n`;
-                }
-                code += `\t\tx = 0\n`;
-                code += `\t\ty = ${i}\n`;
-                code += `\t\tcost = ${f.cost}\n`;
+                if (f.prereq) code += `\t\tprerequisite = { focus = ${f.prereq} }\n`;
+                code += `\t\tx = 0\n\t\ty = ${i}\n\t\tcost = ${f.cost}\n`;
                 code += `\t\tcompletion_reward = {\n`;
-                if (f.effect) {
-                    f.effect.split('\n').forEach(e => {
-                        code += `\t\t\t${e}\n`;
-                    });
-                }
-                code += `\t\t}\n`;
-                code += `\t}\n\n`;
+                if (f.effect) f.effect.split('\n').forEach(e => code += `\t\t\t${e}\n`);
+                code += `\t\t}\n\t}\n\n`;
             });
             code += '}';
-            document.getElementById('codeOutput').textContent = code;
+            document.getElementById('focusCode').textContent = code;
         }
-        function downloadCode() {
-            const code = document.getElementById('codeOutput').textContent;
+
+        // 事件
+        function addEvent() {
+            const id = document.getElementById('eventId').value.trim();
+            const title = document.getElementById('eventTitle').value.trim();
+            const desc = document.getElementById('eventDesc').value.trim();
+            const opt1 = document.getElementById('eventOpt1').value.trim();
+            const effect1 = document.getElementById('eventEffect1').value.trim();
+            if (!id || !title) { alert('请填写事件ID和标题'); return; }
+            events.push({ id, title, desc, opt1, effect1 });
+            document.getElementById('eventList').innerHTML += `<div class="item">${title} (${id})</div>`;
+            genEventCode();
+        }
+        function genEventCode() {
+            let code = '';
+            events.forEach(e => {
+                code += `country_event = {\n`;
+                code += `\tid = ${e.id}\n\ttitle = "${e.title}"\n\tdesc = "${e.desc}"\n`;
+                code += `\tpicture = GFX_goal_generic_american_assembly\n\tis_triggered_only = yes\n`;
+                code += `\toption = {\n\t\tname = "${e.opt1}"\n`;
+                if (e.effect1) e.effect1.split('\n').forEach(ef => code += `\t\t${ef}\n`);
+                code += `\t}\n}\n\n`;
+            });
+            document.getElementById('eventCode').textContent = code;
+        }
+
+        // 理念
+        function addIdea() {
+            const id = document.getElementById('ideaId').value.trim();
+            const name = document.getElementById('ideaName').value.trim();
+            const desc = document.getElementById('ideaDesc').value.trim();
+            const mod = document.getElementById('ideaMod').value.trim();
+            if (!id || !name) { alert('请填写理念ID和名字'); return; }
+            ideas.push({ id, name, desc, mod });
+            document.getElementById('ideaList').innerHTML += `<div class="item">${name} (${id})</div>`;
+            genIdeaCode();
+        }
+        function genIdeaCode() {
+            let code = 'ideas = {\n\tcountry = {\n';
+            ideas.forEach(i => {
+                code += `\t\t${i.id} = {\n\t\t\tpicture = generic_intelligence\n\t\t\t\n`;
+                if (i.mod) i.mod.split('\n').forEach(m => code += `\t\t\t${m}\n`);
+                code += `\t\t}\n`;
+            });
+            code += '\t}\n}';
+            document.getElementById('ideaCode').textContent = code;
+        }
+
+        // 本地化
+        function addLoc() {
+            const key = document.getElementById('locKey').value.trim();
+            const value = document.getElementById('locValue').value.trim();
+            if (!key || !value) { alert('请填写键名和内容'); return; }
+            locs.push({ key, value });
+            document.getElementById('locList').innerHTML += `<div class="item">${key}: ${value}</div>`;
+            genLocCode();
+        }
+        function genLocCode() {
+            let code = '# 红色伪装 mod - 本地化文件\nl_simp_chinese:\n';
+            locs.forEach(l => code += `\t${l.key}:0 "${l.value}"\n`);
+            document.getElementById('locCode').textContent = code;
+        }
+
+        function downloadCode(type) {
+            let code = '';
+            let filename = '';
+            if (type === 'focus') { code = document.getElementById('focusCode').textContent; filename = 'focus_tree.txt'; }
+            if (type === 'event') { code = document.getElementById('eventCode').textContent; filename = 'events.txt'; }
+            if (type === 'idea') { code = document.getElementById('ideaCode').textContent; filename = 'ideas.txt'; }
+            if (type === 'loc') { code = document.getElementById('locCode').textContent; filename = 'localisation_l_chinese.yml'; }
             const blob = new Blob([code], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'custom_focus_tree.txt';
+            a.download = filename;
             a.click();
         }
     </script>
