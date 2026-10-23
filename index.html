@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOI4 Mod 国策树编辑器 - 免费版</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 30px; color: #e94560; }
+        .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel { background: #16213e; padding: 20px; border-radius: 10px; }
+        .panel h2 { margin-bottom: 15px; color: #0f3460; background: #e94560; padding: 5px 10px; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaa; }
+        input, textarea, select { width: 100%; padding: 8px; border: none; border-radius: 5px; background: #0f3460; color: #fff; font-size: 14px; }
+        textarea { height: 100px; resize: vertical; }
+        button { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button:hover { background: #c73650; }
+        button.secondary { background: #0f3460; }
+        pre { background: #0d1b2a; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+        .focus-item { background: #0f3460; padding: 10px; margin-bottom: 10px; border-radius: 5px; cursor: pointer; }
+        .focus-item:hover { background: #1a4a7a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HOI4 Mod 国策树编辑器</h1>
+        <div class="editor">
+            <div class="panel">
+                <h2>添加国策</h2>
+                <div class="form-group">
+                    <label>国策ID</label>
+                    <input type="text" id="focusId" placeholder="例如 SOV_red_camouflage_1">
+                </div>
+                <div class="form-group">
+                    <label>国策名字</label>
+                    <input type="text" id="focusName" placeholder="例如 秘密会议">
+                </div>
+                <div class="form-group">
+                    <label>国策描述</label>
+                    <textarea id="focusDesc" placeholder="输入国策描述..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>成本（天数）</label>
+                    <input type="number" id="focusCost" value="10">
+                </div>
+                <div class="form-group">
+                    <label>前置国策ID（可选）</label>
+                    <input type="text" id="focusPrereq" placeholder="前置国策的ID">
+                </div>
+                <div class="form-group">
+                    <label>效果</label>
+                    <textarea id="focusEffect" placeholder="例如 political_power = 150"></textarea>
+                </div>
+                <button onclick="addFocus()">添加国策</button>
+                <button class="secondary" onclick="generateCode()">生成代码</button>
+                <button class="secondary" onclick="downloadCode()">下载文件</button>
+                <h2 style="margin-top: 30px;">已添加的国策</h2>
+                <div id="focusList"></div>
+            </div>
+            <div class="panel">
+                <h2>生成的代码</h2>
+                <pre id="codeOutput">// 生成的国策树代码会显示在这里</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let focuses = [];
+        function addFocus() {
+            const id = document.getElementById('focusId').value.trim();
+            const name = document.getElementById('focusName').value.trim();
+            const desc = document.getElementById('focusDesc').value.trim();
+            const cost = document.getElementById('focusCost').value;
+            const prereq = document.getElementById('focusPrereq').value.trim();
+            const effect = document.getElementById('focusEffect').value.trim();
+            if (!id || !name) { alert('请填写国策ID和名字'); return; }
+            focuses.push({ id, name, desc, cost, prereq, effect });
+            document.getElementById('focusList').innerHTML += `<div class="focus-item">${name} (${id})</div>`;
+            generateCode();
+        }
+        function generateCode() {
+            let code = 'focus_tree = {\n';
+            code += '\tname = "Custom_Focus_Tree"\n';
+            code += '\tcountry = { factor = 1 }\n';
+            code += '\tdefault = no\n\n';
+            focuses.forEach((f, i) => {
+                code += `\tfocus = {\n`;
+                code += `\t\tid = ${f.id}\n`;
+                code += `\t\ticon = generic_intelligence\n`;
+                if (f.prereq) {
+                    code += `\t\tprerequisite = { focus = ${f.prereq} }\n`;
+                }
+                code += `\t\tx = 0\n`;
+                code += `\t\ty = ${i}\n`;
+                code += `\t\tcost = ${f.cost}\n`;
+                code += `\t\tcompletion_reward = {\n`;
+                if (f.effect) {
+                    f.effect.split('\n').forEach(e => {
+                        code += `\t\t\t${e}\n`;
+                    });
+                }
+                code += `\t\t}\n`;
+                code += `\t}\n\n`;
+            });
+            code += '}';
+            document.getElementById('codeOutput').textContent = code;
+        }
+        function downloadCode() {
+            const code = document.getElementById('codeOutput').textContent;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'custom_focus_tree.txt';
+            a.click();
+        }
+    </script>
+</body>
+</html>
