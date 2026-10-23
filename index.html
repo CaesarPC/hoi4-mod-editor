@@ -6,12 +6,30 @@
     <title>HOI4 Mod 编辑器 - 免费版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
-        .topbar { background: #fff; padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 60px; }
-        .topbar h1 { font-size: 20px; color: #8b6914; margin-right: 30px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; }
+        .topbar { background: #fff; padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 70px; }
+        .topbar h1 { font-size: 22px; color: #8b6914; }
         .topbar .btn { background: #8b6914; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-right: 10px; }
         .topbar .btn:hover { background: #6b4f10; }
-        .main { display: flex; height: calc(100vh - 60px); }
+        .topbar .btn.secondary { background: #f0ebe0; color: #333; }
+        .page { padding: 30px; max-width: 1200px; margin: 0 auto; }
+        .page h2 { font-size: 28px; margin-bottom: 30px; color: #333; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-card .label { color: #999; font-size: 14px; margin-bottom: 10px; }
+        .stat-card .value { font-size: 36px; font-weight: bold; color: #333; }
+        .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .project-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+        .project-card:hover { transform: translateY(-2px); }
+        .project-card .name { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+        .project-card .tag { color: #8b6914; font-size: 14px; margin-bottom: 15px; }
+        .project-card .meta { display: flex; gap: 15px; color: #999; font-size: 13px; margin-bottom: 15px; }
+        .project-card .update { color: #999; font-size: 13px; }
+        .new-project { background: transparent; border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; color: #999; cursor: pointer; }
+        .new-project:hover { background: #faf8f3; }
+        .new-project .icon { font-size: 40px; margin-bottom: 10px; }
+        .editor-page { display: none; height: 100vh; flex-direction: column; }
+        .editor-main { display: flex; flex: 1; }
         .sidebar { width: 280px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 20px 0; overflow-y: auto; }
         .sidebar-item { padding: 12px 25px; cursor: pointer; color: #666; display: flex; align-items: center; gap: 10px; }
         .sidebar-item:hover { background: #f0ebe0; }
@@ -33,129 +51,166 @@
     </style>
 </head>
 <body>
-    <div class="topbar">
-        <h1>🔨 红色伪装 - Mod编辑器</h1>
-        <button class="btn secondary">导入mod文件</button>
-        <button class="btn secondary">校验我的mod</button>
-        <button class="btn" style="margin-left:auto;">导出mod (ZIP)</button>
-    </div>
-    <div class="main">
-        <div class="sidebar">
-            <div class="sidebar-section">创作</div>
-            <div class="sidebar-item active" onclick="showTab('focus')">🎯 国家焦点</div>
-            <div class="sidebar-item" onclick="showTab('event')">📜 事件</div>
-            <div class="sidebar-item" onclick="showTab('idea')">💡 理念</div>
-            <div class="sidebar-item" onclick="showTab('politics')">🏛️ 政治与意识形态</div>
-            <div class="sidebar-item" onclick="showTab('character')">👤 角色</div>
-            <div class="sidebar-item" onclick="showTab('decision')">📋 决议</div>
-            <div class="sidebar-section">完成</div>
-            <div class="sidebar-item">✅ 校验我的mod</div>
-            <div class="sidebar-item">⬇️ 导出mod (ZIP)</div>
+    <div id="homePage">
+        <div class="topbar">
+            <h1>🔨 钢之工坊免费版</h1>
         </div>
-        <div class="content">
-            <!-- 国家焦点 -->
-            <div id="focus" class="tab-content active">
-                <div class="card">
-                    <h2>国策树</h2>
-                    <p style="color:#666; margin-bottom:20px;">国策树是你mod的故事主干，玩家每70天做一次选择。</p>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                        <div>
-                            <div class="form-group">
-                                <label>国策名字</label>
-                                <input type="text" id="focusName" placeholder="例如 秘密会议">
+        <div class="page">
+            <h2>我的项目</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="label">项目</div>
+                    <div class="value">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">国家</div>
+                    <div class="value">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">实体</div>
+                    <div class="value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">最近编辑</div>
+                    <div class="value" style="font-size:18px;">刚刚<br><small style="color:#999;">红色伪装</small></div>
+                </div>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card" onclick="openProject()">
+                    <div class="name">红色伪装</div>
+                    <div class="tag">SSF - 苏维埃社会主义联邦</div>
+                    <div class="meta">
+                        <span>0个角色</span>
+                        <span>0国策</span>
+                        <span>0科技</span>
+                    </div>
+                    <div class="update">更新于：2026/10/23</div>
+                </div>
+                <div class="project-card new-project">
+                    <div class="icon">+</div>
+                    <div>新建空项目</div>
+                </div>
+                <div class="project-card new-project">
+                    <div class="icon">📤</div>
+                    <div>导入已有mod</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editorPage" class="editor-page">
+        <div class="topbar">
+            <h1>🔨 红色伪装</h1>
+            <button class="btn secondary" onclick="goHome()">← 返回项目列表</button>
+            <button class="btn secondary">导入mod文件</button>
+            <button class="btn" style="margin-left:auto;">导出mod (ZIP)</button>
+        </div>
+        <div class="editor-main">
+            <div class="sidebar">
+                <div class="sidebar-section">创作</div>
+                <div class="sidebar-item active" onclick="showTab('focus')">🎯 国家焦点</div>
+                <div class="sidebar-item" onclick="showTab('event')">📜 事件</div>
+                <div class="sidebar-item" onclick="showTab('idea')">💡 理念</div>
+                <div class="sidebar-item" onclick="showTab('politics')">🏛️ 政治与意识形态</div>
+                <div class="sidebar-item" onclick="showTab('character')">👤 角色</div>
+                <div class="sidebar-item" onclick="showTab('decision')">📋 决议</div>
+                <div class="sidebar-section">完成</div>
+                <div class="sidebar-item">✅ 校验我的mod</div>
+                <div class="sidebar-item">⬇️ 导出mod (ZIP)</div>
+            </div>
+            <div class="content">
+                <div id="focus" class="tab-content active">
+                    <div class="card">
+                        <h2>国策树</h2>
+                        <p style="color:#666; margin-bottom:20px;">国策树是你mod的故事主干，玩家每70天做一次选择。</p>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                            <div>
+                                <div class="form-group">
+                                    <label>国策名字</label>
+                                    <input type="text" id="focusName" placeholder="例如 秘密会议">
+                                </div>
+                                <div class="form-group">
+                                    <label>国家TAG</label>
+                                    <select id="focusTag">
+                                        <option value="SSF">苏维埃社会主义联邦 SSF</option>
+                                        <option value="GER">德国 GER</option>
+                                        <option value="USA">美国 USA</option>
+                                        <option value="CHI">中国 CHI</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>成本（天）</label>
+                                    <input type="number" id="focusCost" value="10">
+                                </div>
+                                <div class="form-group">
+                                    <label>快速添加效果</label>
+                                    <select id="effectSelect">
+                                        <option value="">-- 选择效果 --</option>
+                                        <option value="political_power = 150">+150政治点</option>
+                                        <option value="stability_factor = 0.1">+10%稳定度</option>
+                                        <option value="war_support = 0.1">+10%战争支持</option>
+                                    </select>
+                                    <button class="btn secondary" style="margin-top:10px;" onclick="addEffect()">添加效果</button>
+                                </div>
+                                <button class="btn" onclick="addFocus()">+ 添加国策</button>
                             </div>
-                            <div class="form-group">
-                                <label>国家TAG</label>
-                                <select id="focusTag">
-                                    <option value="SSF">苏维埃社会主义联邦 SSF</option>
-                                    <option value="GER">德国 GER</option>
-                                    <option value="USA">美国 USA</option>
-                                    <option value="CHI">中国 CHI</option>
-                                </select>
+                            <div>
+                                <label>效果代码（每行一条）</label>
+                                <textarea id="focusEffect" style="height:200px;"></textarea>
                             </div>
-                            <div class="form-group">
-                                <label>成本（天）</label>
-                                <input type="number" id="focusCost" value="10">
-                            </div>
-                            <div class="form-group">
-                                <label>快速添加效果</label>
-                                <select id="effectSelect">
-                                    <option value="">-- 选择效果 --</option>
-                                    <option value="political_power = 150">+150政治点</option>
-                                    <option value="stability_factor = 0.1">+10%稳定度</option>
-                                    <option value="war_support = 0.1">+10%战争支持</option>
-                                    <option value="production_speed_by_factory = 0.1">+10%军工生产</option>
-                                    <option value="research_speed_factor = 0.1">+10%研究速度</option>
-                                </select>
-                                <button class="btn secondary" style="margin-top:10px;" onclick="addEffect()">添加效果</button>
-                            </div>
-                            <button class="btn" onclick="addFocus()">+ 添加国策</button>
                         </div>
-                        <div>
-                            <label>效果代码（每行一条）</label>
-                            <textarea id="focusEffect" style="height:200px;"></textarea>
+                    </div>
+                    <div class="card">
+                        <h2>已添加的国策</h2>
+                        <div id="focusList" class="empty">暂无国策，新建一个开始。</div>
+                    </div>
+                </div>
+
+                <div id="event" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <h2>事件</h2>
+                        <p style="color:#666; margin-bottom:20px;">事件是玩家撞见你故事的瞬间。</p>
+                        <div class="form-group">
+                            <label>事件标题</label>
+                            <input type="text" id="eventTitle" placeholder="例如 联合国大会">
                         </div>
+                        <div class="form-group">
+                            <label>事件描述</label>
+                            <textarea id="eventDesc" placeholder="输入事件描述..."></textarea>
+                        </div>
+                        <button class="btn" onclick="addEvent()">+ 添加事件</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加的事件</h2>
+                        <div id="eventList" class="empty">暂无事件。</div>
                     </div>
                 </div>
-                <div class="card">
-                    <h2>已添加的国策</h2>
-                    <div id="focusList" class="empty">暂无国策，新建一个开始。</div>
-                </div>
-            </div>
 
-            <!-- 事件 -->
-            <div id="event" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2>事件</h2>
-                    <p style="color:#666; margin-bottom:20px;">事件是玩家撞见你故事的瞬间，弹窗、抉择、转折点。</p>
-                    <div class="form-group">
-                        <label>事件标题</label>
-                        <input type="text" id="eventTitle" placeholder="例如 联合国大会">
+                <div id="idea" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <h2>理念</h2>
+                        <p style="color:#666; margin-bottom:20px;">国家精神，开局的buff与包袱。</p>
+                        <div class="form-group">
+                            <label>理念名字</label>
+                            <input type="text" id="ideaName" placeholder="例如 苏联重生">
+                        </div>
+                        <div class="form-group">
+                            <label>修正（每行一条）</label>
+                            <textarea id="ideaMod" placeholder="例如 stability_factor = 0.1"></textarea>
+                        </div>
+                        <button class="btn" onclick="addIdea()">+ 添加理念</button>
                     </div>
-                    <div class="form-group">
-                        <label>事件描述</label>
-                        <textarea id="eventDesc" placeholder="输入事件描述..."></textarea>
+                    <div class="card">
+                        <h2>已添加的理念</h2>
+                        <div id="ideaList" class="empty">暂无理念。</div>
                     </div>
-                    <div class="form-group">
-                        <label>选项文字</label>
-                        <input type="text" id="eventOpt" placeholder="例如 同志们，我们回来了">
-                    </div>
-                    <button class="btn" onclick="addEvent()">+ 添加事件</button>
                 </div>
-                <div class="card">
-                    <h2>已添加的事件</h2>
-                    <div id="eventList" class="empty">暂无事件。</div>
-                </div>
-            </div>
 
-            <!-- 理念 -->
-            <div id="idea" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2>理念</h2>
-                    <p style="color:#666; margin-bottom:20px;">国家精神，是你国家的性格，开局的buff与包袱。</p>
-                    <div class="form-group">
-                        <label>理念名字</label>
-                        <input type="text" id="ideaName" placeholder="例如 苏联重生">
-                    </div>
-                    <div class="form-group">
-                        <label>修正（每行一条）</label>
-                        <textarea id="ideaMod" placeholder="例如 stability_factor = 0.1"></textarea>
-                    </div>
-                    <button class="btn" onclick="addIdea()">+ 添加理念</button>
-                </div>
-                <div class="card">
-                    <h2>已添加的理念</h2>
-                    <div id="ideaList" class="empty">暂无理念。</div>
-                </div>
-            </div>
-
-            <!-- 政治与意识形态 -->
-            <div id="politics" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2>国家政治</h2>
-                    <p style="color:#666; margin-bottom:20px;">设置各意识形态支持率、当前执政意识形态。</p>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                        <div>
+                <div id="politics" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <h2>国家政治</h2>
+                        <p style="color:#666; margin-bottom:20px;">设置各意识形态支持率。</p>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                             <div class="form-group">
                                 <label>共产主义支持率（%）</label>
                                 <input type="number" id="communistSupport" value="80">
@@ -164,8 +219,6 @@
                                 <label>民主主义支持率（%）</label>
                                 <input type="number" id="democraticSupport" value="5">
                             </div>
-                        </div>
-                        <div>
                             <div class="form-group">
                                 <label>法西斯主义支持率（%）</label>
                                 <input type="number" id="fascistSupport" value="5">
@@ -175,64 +228,47 @@
                                 <input type="number" id="neutralSupport" value="10">
                             </div>
                         </div>
+                        <button class="btn">保存政治设置</button>
                     </div>
-                    <button class="btn">保存政治设置</button>
                 </div>
-            </div>
 
-            <!-- 角色 -->
-            <div id="character" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2>角色</h2>
-                    <p style="color:#666; margin-bottom:20px;">给你的国家一张脸，领袖、将军、大臣。</p>
-                    <div class="form-group">
-                        <label>角色名字</label>
-                        <input type="text" id="charName" placeholder="例如 普京">
+                <div id="character" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <h2>角色</h2>
+                        <p style="color:#666; margin-bottom:20px;">给你的国家一张脸。</p>
+                        <div class="form-group">
+                            <label>角色名字</label>
+                            <input type="text" id="charName" placeholder="例如 普京">
+                        </div>
+                        <button class="btn" onclick="addCharacter()">+ 添加角色</button>
                     </div>
-                    <div class="form-group">
-                        <label>角色职位</label>
-                        <select id="charRole">
-                            <option>国家领袖</option>
-                            <option>军队领袖</option>
-                            <option>外交部长</option>
-                        </select>
+                    <div class="card">
+                        <h2>已添加的角色</h2>
+                        <div id="charList" class="empty">暂无角色。</div>
                     </div>
-                    <button class="btn" onclick="addCharacter()">+ 添加角色</button>
                 </div>
-                <div class="card">
-                    <h2>已添加的角色</h2>
-                    <div id="charList" class="empty">暂无角色。</div>
-                </div>
-            </div>
 
-            <!-- 决议 -->
-            <div id="decision" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h2>决议</h2>
-                    <p style="color:#666; margin-bottom:20px;">决议是玩家主动出手的地方，限时行动、持续项目。</p>
-                    <div class="form-group">
-                        <label>决议名字</label>
-                        <input type="text" id="decName" placeholder="例如 加速建设纺织厂">
+                <div id="decision" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <h2>决议</h2>
+                        <p style="color:#666; margin-bottom:20px;">决议是玩家主动出手的地方。</p>
+                        <div class="form-group">
+                            <label>决议名字</label>
+                            <input type="text" id="decName" placeholder="例如 加速建设纺织厂">
+                        </div>
+                        <button class="btn" onclick="addDecision()">+ 添加决议</button>
                     </div>
-                    <div class="form-group">
-                        <label>消耗政治点</label>
-                        <input type="number" id="decCost" value="100">
+                    <div class="card">
+                        <h2>已添加的决议</h2>
+                        <div id="decList" class="empty">暂无决议。</div>
                     </div>
-                    <button class="btn" onclick="addDecision()">+ 添加决议</button>
-                </div>
-                <div class="card">
-                    <h2>已添加的决议</h2>
-                    <div id="decList" class="empty">暂无决议。</div>
                 </div>
             </div>
-        </div>
-        <div class="preview">
-            <h2 style="color:#8b6914; margin-bottom:15px;">实时预览</h2>
-            <div style="background:#1a1a2e; border-radius:8px; padding:20px; color:#fff; text-align:center; min-height:400px;">
-                <p style="color:#999; margin-top:150px;">在这里预览游戏内效果</p>
-            </div>
-            <div style="margin-top:20px;">
-                <button class="btn" style="width:100%;">在游戏里查看</button>
+            <div class="preview">
+                <h2 style="color:#8b6914; margin-bottom:15px;">实时预览</h2>
+                <div style="background:#1a1a2e; border-radius:8px; padding:20px; color:#fff; text-align:center; min-height:400px;">
+                    <p style="color:#999; margin-top:150px;">在这里预览游戏内效果</p>
+                </div>
             </div>
         </div>
     </div>
@@ -243,6 +279,16 @@
         let ideas = [];
         let characters = [];
         let decisions = [];
+
+        function openProject() {
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('editorPage').style.display = 'flex';
+        }
+
+        function goHome() {
+            document.getElementById('editorPage').style.display = 'none';
+            document.getElementById('homePage').style.display = 'block';
+        }
 
         function showTab(tab) {
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -262,48 +308,42 @@
             const name = document.getElementById('focusName').value.trim();
             const tag = document.getElementById('focusTag').value;
             const cost = document.getElementById('focusCost').value;
-            const effect = document.getElementById('focusEffect').value.trim();
             if (!name) { alert('请输入国策名字'); return; }
             const id = tag + '_' + name.replace(/\s+/g, '_').toLowerCase();
-            focuses.push({ id, name, tag, cost, effect });
+            focuses.push({ id, name, tag, cost });
             document.getElementById('focusList').innerHTML = `<div class="list-item"><span>${name} (${id})</span><span style="color:#999;">${cost}天</span></div>`;
             alert('国策添加成功！');
         }
 
         function addEvent() {
             const title = document.getElementById('eventTitle').value.trim();
-            const desc = document.getElementById('eventDesc').value.trim();
-            const opt = document.getElementById('eventOpt').value.trim();
             if (!title) { alert('请输入事件标题'); return; }
-            events.push({ title, desc, opt });
+            events.push({ title });
             document.getElementById('eventList').innerHTML = `<div class="list-item"><span>${title}</span></div>`;
             alert('事件添加成功！');
         }
 
         function addIdea() {
             const name = document.getElementById('ideaName').value.trim();
-            const mod = document.getElementById('ideaMod').value.trim();
             if (!name) { alert('请输入理念名字'); return; }
-            ideas.push({ name, mod });
+            ideas.push({ name });
             document.getElementById('ideaList').innerHTML = `<div class="list-item"><span>${name}</span></div>`;
             alert('理念添加成功！');
         }
 
         function addCharacter() {
             const name = document.getElementById('charName').value.trim();
-            const role = document.getElementById('charRole').value;
             if (!name) { alert('请输入角色名字'); return; }
-            characters.push({ name, role });
-            document.getElementById('charList').innerHTML = `<div class="list-item"><span>${name}</span><span style="color:#999;">${role}</span></div>`;
+            characters.push({ name });
+            document.getElementById('charList').innerHTML = `<div class="list-item"><span>${name}</span></div>`;
             alert('角色添加成功！');
         }
 
         function addDecision() {
             const name = document.getElementById('decName').value.trim();
-            const cost = document.getElementById('decCost').value;
             if (!name) { alert('请输入决议名字'); return; }
-            decisions.push({ name, cost });
-            document.getElementById('decList').innerHTML = `<div class="list-item"><span>${name}</span><span style="color:#999;">${cost}政治点</span></div>`;
+            decisions.push({ name });
+            document.getElementById('decList').innerHTML = `<div class="list-item"><span>${name}</span></div>`;
             alert('决议添加成功！');
         }
     </script>
