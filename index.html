@@ -12,9 +12,9 @@
         .toolbar button:hover { background: #1a4a7a; }
         .toolbar button.primary { background: #38bdf8; color: #000; }
         .game-preview { width: 100vw; height: calc(100vh - 50px); background: #0d1b2a; position: relative; overflow: auto; background-image: radial-gradient(circle, #1a4a7a 1px, transparent 1px); background-size: 30px 30px; }
-        .focus-node { position: absolute; width: 100px; height: 80px; background: linear-gradient(180deg, #16213e 0%, #0f3460 100%); border: 2px solid #38bdf8; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 5px; }
+        .focus-node { position: absolute; width: 100px; height: 80px; background: linear-gradient(180deg, #16213e 0%, #0f3460 100%); border: 2px solid #38bdf8; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: move; padding: 5px; }
         .focus-node:hover { border-color: #7dd3fc; background: #1a4a7a; }
-        .focus-node.completed { border-color: #22c55e; }
+        .focus-node.dragging { opacity: 0.5; }
         .focus-icon { width: 40px; height: 40px; background: #38bdf8; border-radius: 4px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .focus-name { font-size: 11px; text-align: center; line-height: 1.2; }
         .editor-panel { position: fixed; right: 0; top: 50px; width: 350px; height: calc(100vh - 50px); background: #16213e; padding: 20px; border-left: 1px solid #0f3460; overflow-y: auto; display: none; z-index: 20; }
@@ -35,7 +35,7 @@
         <span style="margin-left:auto; color:#94a3b8; font-size:12px;">拖动节点调整位置，点击节点编辑</span>
     </div>
     <div class="game-preview" id="canvas">
-        <div class="focus-node" style="left:100px; top:100px;" onclick="editNode(this)">
+        <div class="focus-node" style="left:100px; top:100px;" data-id="0">
             <div class="focus-icon">★</div>
             <div class="focus-name">秘密会议</div>
         </div>
@@ -88,13 +88,17 @@
             { id: 'SOV_red_camouflage_1', name: '秘密会议', tag: 'SOV', cost: 10, effect: 'political_power = 150', x: 100, y: 100 }
         ];
         let selectedNode = null;
+        let dragging = null;
+        let offsetX, offsetY;
 
         function addFocus() {
             const name = prompt('国策名字：');
             if (!name) return;
             const tag = document.getElementById('editTag').value;
-            const id = tag + '_' + name.replace(/\s+/g, '_').toLowerCase();
-            focuses.push({ id, name, tag, cost: 10, effect: '', x: Math.random()*500+50, y: Math.random()*400+50 });
+            const id = tag + '_' + name.replace(/\s+/g, '_').toLowerCase() + '_' + focuses.length;
+            const x = 100 + focuses.length * 150;
+            const y = 100 + Math.random() * 200;
+            focuses.push({ id, name, tag, cost: 10, effect: '', x, y });
             renderCanvas();
         }
 
@@ -106,13 +110,39 @@
                 node.className = 'focus-node';
                 node.style.left = f.x + 'px';
                 node.style.top = f.y + 'px';
+                node.dataset.index = i;
                 node.innerHTML = `<div class="focus-icon">★</div><div class="focus-name">${f.name}</div>`;
-                node.onclick = () => editNode(node, f);
+                node.onmousedown = startDrag;
+                node.ondblclick = () => editNode(f);
                 canvas.appendChild(node);
             });
         }
 
-        function editNode(node, data) {
+        function startDrag(e) {
+            e.preventDefault();
+            const node = e.target.closest('.focus-node');
+            dragging = parseInt(node.dataset.index);
+            offsetX = e.clientX - focuses[dragging].x;
+            offsetY = e.clientY - focuses[dragging].y;
+            node.classList.add('dragging');
+            document.onmousemove = drag;
+            document.onmouseup = stopDrag;
+        }
+
+        function drag(e) {
+            if (dragging === null) return;
+            focuses[dragging].x = e.clientX - offsetX;
+            focuses[dragging].y = e.clientY - offsetY;
+            renderCanvas();
+        }
+
+        function stopDrag() {
+            dragging = null;
+            document.onmousemove = null;
+            document.onmouseup = null;
+        }
+
+        function editNode(data) {
             selectedNode = data;
             document.getElementById('editName').value = data.name;
             document.getElementById('editTag').value = data.tag;
@@ -153,7 +183,7 @@
                 code += `\tfocus = {\n`;
                 code += `\t\tid = ${f.id}\n`;
                 code += `\t\ticon = generic_intelligence\n`;
-                code += `\t\tx = 0\n\t\ty = ${i}\n\t\tcost = ${f.cost}\n`;
+                code += `\t\tx = ${Math.round(f.x / 150)}\n\t\ty = ${Math.round(f.y / 100)}\n\t\tcost = ${f.cost}\n`;
                 code += `\t\tcompletion_reward = {\n`;
                 f.effect.split('\n').forEach(e => code += `\t\t\t${e}\n`);
                 code += `\t\t}\n\t}\n\n`;
