@@ -82,7 +82,7 @@
 <body>
     <svg style="display:none">
         <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
         <symbol id="icon-crown" viewBox="0 0 24 24"><path d="M2 18h20M2 18l2-11 5 5 3-7 3 7 5-5 2 11z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
         <symbol id="icon-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
         <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></symbol>
@@ -252,7 +252,7 @@
     <script>
         const API_BASE = 'https://hoi4-mod-editor.9dbcdc0ced2b5605508bfbd8d950042e.workers.dev';
         const PROJECT_ID = 'red_camouflage';
-        let data = { country: { tag: 'SSF', name: '苏维埃社会主义联邦', ideology: 'communism', capital: 42 }, characters: [], ideas: [], focuses: [], events: [], decisions: [] };
+        let data = { country: { tag: 'SSF', name: '苏维埃社会主义联邦', ideology: 'communism', capital: 42, support: {dem:5, com:80, fas:5, neu:10} }, characters: [], ideas: [], focuses: [], events: [], decisions: [] };
         async function loadFromCloud() {
             try { const res = await fetch(`${API_BASE}/api/project/${PROJECT_ID}`); const cloudData = await res.json(); if (cloudData && !cloudData.error) { data = cloudData; document.getElementById('countryTag').value = data.country.tag; document.getElementById('countryName').value = data.country.name; renderAll(); } } catch(e) {}
         }
@@ -279,14 +279,52 @@
         function importMod() { alert('导入mod功能后续更新'); }
         function showTab(tab, el) { document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); document.getElementById(tab).style.display = 'block'; if (window.innerWidth < 768) toggleSidebar(); }
         function saveCountry() { data.country.tag = document.getElementById('countryTag').value.toUpperCase(); data.country.name = document.getElementById('countryName').value; saveToCloud(); alert('保存成功！'); }
-        function savePolitics() { saveToCloud(); alert('保存成功！'); }
+        function savePolitics() { data.country.support.dem = document.getElementById('sup_dem').value; data.country.support.com = document.getElementById('sup_com').value; data.country.support.fas = document.getElementById('sup_fas').value; data.country.support.neu = document.getElementById('sup_neu').value; saveToCloud(); alert('保存成功！'); }
         function addCharacter() { const name = document.getElementById('charName').value.trim(); const type = document.getElementById('charType').value; if (!name) { alert('请输入名字'); return; } data.characters.push({ name, type }); renderList('charList', data.characters, c => c.name + ' (' + c.type + ')'); saveToCloud(); }
         function addIdea() { const name = document.getElementById('ideaName').value.trim(); const mod = document.getElementById('ideaMod').value.trim(); if (!name) { alert('请输入名字'); return; } data.ideas.push({ name, mod }); renderList('ideaList', data.ideas, i => i.name); saveToCloud(); }
         function addFocus() { const name = document.getElementById('focusName').value.trim(); const cost = document.getElementById('focusCost').value; const effect = document.getElementById('focusEffect').value.trim(); if (!name) { alert('请输入名字'); return; } data.focuses.push({ name, cost, effect }); renderList('focusList', data.focuses, f => f.name + ' (' + f.cost + '天)'); saveToCloud(); }
         function addEvent() { const title = document.getElementById('eventTitle').value.trim(); const desc = document.getElementById('eventDesc').value.trim(); if (!title) { alert('请输入标题'); return; } data.events.push({ title, desc }); renderList('eventList', data.events, e => e.title); saveToCloud(); }
         function addDecision() { const name = document.getElementById('decName').value.trim(); const cost = document.getElementById('decCost').value; if (!name) { alert('请输入名字'); return; } data.decisions.push({ name, cost }); renderList('decList', data.decisions, d => d.name + ' (' + d.cost + '政治点)'); saveToCloud(); }
         function renderList(id, arr, labelFn) { document.getElementById(id).innerHTML = arr.map((item) => `<div class="list-item"><div class="info"><div class="name">${labelFn(item)}</div></div></div>`).join(''); }
-        function exportMod() { alert('导出中...'); const zip = new JSZip(); zip.file('descriptor.mod', 'version="1.0.0"\nname="红色伪装"\n'); zip.folder('common/country_tags').file('00_mod.txt', data.country.tag + ' = "' + data.country.name + '"'); zip.generateAsync({type:'blob'}).then(content => { saveAs(content, 'red_camouflage.zip'); alert('导出成功！'); }); }
+        function exportMod() {
+            alert('正在生成mod ZIP...');
+            const zip = new JSZip();
+            const modName = 'red_camouflage';
+            // descriptor.mod
+            zip.file('descriptor.mod', `version="1.0.0"\nname="红色伪装"\nsupported_version=".*"\ntags={ "剧情" "架空" }\n`);
+            // country tags
+            zip.folder('common/country_tags').file('00_' + modName + '.txt', `${data.country.tag} = "\"${data.country.name}\""`);
+            // ideas
+            let ideasContent = '';
+            data.ideas.forEach(idea => {
+                ideasContent += `${data.country.tag}_${idea.name.replace(/\s+/g, '_').toLowerCase()} = {\n\tpicture = "generic_communism"
+\tremove_effect = {}\n\tadd_conservative_drift = 0.1\n}\n`;
+            });
+            zip.folder('common/ideas').file(data.country.tag.toLowerCase() + '_ideas.txt', ideasContent);
+            // focuses
+            let focusContent = 'focus_tree = {\n\tid = "' + data.country.tag.toLowerCase() + '_starter_tree"\n\tcountry = {\n\t\tfocus = {\n';
+            data.focuses.forEach((f, i) => {
+                focusContent += `\t\t\tid = "${data.country.tag.toLowerCase()}_${f.name.replace(/\s+/g, '_').toLowerCase()}"\n\t\ticon = "generic_unknown"\n\t\tx = ${i*2}\n\t\ty = 0\n\t\tcost = ${f.cost}\n\t\tcompletion_reward = {\n\t\t\t${f.effect}\n\t\t}\n\t\t}\n`;
+            });
+            focusContent += '\t}\n}\n';
+            zip.folder('common/national_focus').file(data.country.tag.toLowerCase() + '_focus.txt', focusContent);
+            // events
+            let eventContent = 'add_namespace = ' + data.country.tag.toLowerCase() + '_starter\n\n';
+            data.events.forEach((e, i) => {
+                eventContent += `country_event = {\n\tid = ${data.country.tag.toLowerCase()}_starter.${i+1}\n\ttitle = "${e.title}"\n\tdesc = "${e.desc}"\n\t\n}\n\n`;
+            });
+            zip.folder('events').file(data.country.tag.toLowerCase() + '_events.txt', eventContent);
+            // localisation
+            let locContent = 'l_simp_chinese:\n';
+            locContent += ' ' + data.country.tag + ':0 "' + data.country.name + '"\n';
+            data.focuses.forEach(f => { locContent += ' ' + data.country.tag.toLowerCase() + '_' + f.name.replace(/\s+/g, '_').toLowerCase() + ':0 "' + f.name + '"\n'; });
+            data.ideas.forEach(i => { locContent += ' ' + data.country.tag.toLowerCase() + '_' + i.name.replace(/\s+/g, '_').toLowerCase() + ':0 "' + i.name + '"\n'; });
+            zip.folder('localisation/chinese').file(data.country.tag.toLowerCase() + '_l_simp_chinese.yml', locContent);
+            zip.generateAsync({type:'blob'}).then(content => {
+                saveAs(content, modName + '.zip');
+                alert('导出成功！ZIP里已经包含国家TAG、国策、理念、事件和中文本地化，解压到游戏mod文件夹就能用。');
+            });
+        }
     </script>
 </body>
 </html>
