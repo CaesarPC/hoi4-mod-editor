@@ -6,203 +6,172 @@
     <title>HOI4 Mod 编辑器 - 免费版</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Microsoft YaHei', sans-serif; background: #1a1a2e; color: #eee; overflow: hidden; }
-        .toolbar { background: #16213e; padding: 10px 20px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #0f3460; position: relative; z-index: 10; height: 50px; }
-        .toolbar button { background: #0f3460; color: #eee; border: 1px solid #38bdf8; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
-        .toolbar button:hover { background: #1a4a7a; }
-        .toolbar button.primary { background: #38bdf8; color: #000; }
-        .game-preview { width: 100vw; height: calc(100vh - 50px); background: #0d1b2a; position: relative; overflow: auto; background-image: radial-gradient(circle, #1a4a7a 1px, transparent 1px); background-size: 30px 30px; }
-        .focus-node { position: absolute; width: 100px; height: 80px; background: linear-gradient(180deg, #16213e 0%, #0f3460 100%); border: 2px solid #38bdf8; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: move; padding: 5px; }
-        .focus-node:hover { border-color: #7dd3fc; background: #1a4a7a; }
-        .focus-node.dragging { opacity: 0.5; }
-        .focus-icon { width: 40px; height: 40px; background: #38bdf8; border-radius: 4px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .focus-name { font-size: 11px; text-align: center; line-height: 1.2; }
-        .editor-panel { position: fixed; right: 0; top: 50px; width: 350px; height: calc(100vh - 50px); background: #16213e; padding: 20px; border-left: 1px solid #0f3460; overflow-y: auto; display: none; z-index: 20; }
-        .editor-panel.show { display: block; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
+        .topbar { background: #fff; padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 60px; }
+        .topbar h1 { font-size: 20px; color: #8b6914; margin-right: 30px; }
+        .topbar .btn { background: #8b6914; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-right: 10px; }
+        .topbar .btn:hover { background: #6b4f10; }
+        .main { display: flex; height: calc(100vh - 60px); }
+        .sidebar { width: 280px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 20px 0; overflow-y: auto; }
+        .sidebar-item { padding: 12px 25px; cursor: pointer; color: #666; display: flex; align-items: center; gap: 10px; }
+        .sidebar-item:hover { background: #f0ebe0; }
+        .sidebar-item.active { background: #f0ebe0; color: #8b6914; border-right: 3px solid #8b6914; font-weight: 500; }
+        .sidebar-section { padding: 15px 25px; font-size: 12px; color: #999; text-transform: uppercase; margin-top: 10px; }
+        .content { flex: 1; padding: 30px; overflow-y: auto; }
+        .preview { width: 400px; background: #fff; border-left: 1px solid #e0d8c8; padding: 20px; overflow-y: auto; }
+        .card { background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card h2 { color: #8b6914; margin-bottom: 15px; font-size: 18px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 13px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #0f3460; border-radius: 4px; background: #0d1b2a; color: #eee; font-size: 13px; }
-        textarea { height: 80px; resize: vertical; }
-        h2 { margin-bottom: 15px; color: #38bdf8; font-size: 16px; }
+        label { display: block; margin-bottom: 5px; color: #666; font-size: 13px; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; color: #333; font-size: 14px; }
+        textarea { height: 100px; resize: vertical; }
+        .btn { background: #8b6914; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-right: 10px; }
+        .btn:hover { background: #6b4f10; }
+        .btn.secondary { background: #e0d8c8; color: #333; }
+        pre { background: #1e293b; color: #a5f3fc; padding: 15px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
     </style>
 </head>
 <body>
-    <div class="toolbar">
-        <h1 style="font-size:18px; margin-right:20px; color:#38bdf8;">HOI4 Mod 编辑器</h1>
-        <button class="primary" onclick="addFocus()">+ 添加国策</button>
-        <button onclick="generateCode()">生成代码</button>
-        <button onclick="downloadCode()">下载文件</button>
-        <span style="margin-left:auto; color:#94a3b8; font-size:12px;">拖动节点调整位置，点击节点编辑</span>
+    <div class="topbar">
+        <h1>🔨 红色伪装 - Mod编辑器</h1>
+        <button class="btn">导入mod文件</button>
+        <button class="btn secondary">校验我的mod</button>
+        <button class="btn" style="margin-left:auto;">导出mod (ZIP)</button>
     </div>
-    <div class="game-preview" id="canvas">
-        <div class="focus-node" style="left:100px; top:100px;" data-id="0">
-            <div class="focus-icon">★</div>
-            <div class="focus-name">秘密会议</div>
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-section">创作</div>
+            <div class="sidebar-item active" onclick="showTab('focus')">🎯 国家焦点</div>
+            <div class="sidebar-item" onclick="showTab('event')">📜 事件</div>
+            <div class="sidebar-item" onclick="showTab('idea')">💡 理念</div>
+            <div class="sidebar-item" onclick="showTab('politics')">🏛️ 政治与意识形态</div>
+            <div class="sidebar-item" onclick="showTab('character')">👤 角色</div>
+            <div class="sidebar-item" onclick="showTab('decision')">📋 决议</div>
+            <div class="sidebar-section">完成</div>
+            <div class="sidebar-item">✅ 校验我的mod</div>
+            <div class="sidebar-item">⬇️ 导出mod (ZIP)</div>
         </div>
-    </div>
-    <div class="editor-panel" id="editorPanel">
-        <h2>编辑国策</h2>
-        <div class="form-group">
-            <label>国策名字</label>
-            <input type="text" id="editName" value="秘密会议">
+        <div class="content">
+            <div id="focus" class="tab-content active">
+                <div class="card">
+                    <h2>国策树编辑</h2>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                        <div>
+                            <div class="form-group">
+                                <label>国策名字</label>
+                                <input type="text" id="focusName" placeholder="例如 秘密会议">
+                            </div>
+                            <div class="form-group">
+                                <label>国家TAG</label>
+                                <select id="focusTag">
+                                    <option value="SSF">苏维埃社会主义联邦 SSF</option>
+                                    <option value="GER">德国 GER</option>
+                                    <option value="USA">美国 USA</option>
+                                    <option value="CHI">中国 CHI</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>成本（天）</label>
+                                <input type="number" id="focusCost" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label>效果（选效果点添加）</label>
+                                <select id="effectSelect">
+                                    <option value="">-- 选择效果 --</option>
+                                    <option value="political_power = 150">+150政治点</option>
+                                    <option value="stability_factor = 0.1">+10%稳定度</option>
+                                    <option value="war_support = 0.1">+10%战争支持</option>
+                                </select>
+                                <button class="btn secondary" style="margin-top:10px;" onclick="addEffect()">添加效果</button>
+                            </div>
+                            <button class="btn" onclick="addFocus()">添加国策</button>
+                        </div>
+                        <div>
+                            <label>效果代码</label>
+                            <textarea id="focusEffect" style="height:200px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>已添加的国策</h2>
+                    <div id="focusList"></div>
+                </div>
+            </div>
+
+            <div id="event" class="tab-content" style="display:none;">
+                <div class="card">
+                    <h2>事件编辑</h2>
+                    <p>事件是玩家撞见你故事的瞬间，弹窗、抉择、转折点。</p>
+                </div>
+            </div>
+
+            <div id="idea" class="tab-content" style="display:none;">
+                <div class="card">
+                    <h2>理念编辑</h2>
+                    <p>国家精神，是你国家的性格，开局的buff与包袱。</p>
+                </div>
+            </div>
+
+            <div id="politics" class="tab-content" style="display:none;">
+                <div class="card">
+                    <h2>国家政治</h2>
+                    <p>设置各意识形态支持率、执政意识形态和选举规则。</p>
+                </div>
+            </div>
+
+            <div id="character" class="tab-content" style="display:none;">
+                <div class="card">
+                    <h2>角色编辑</h2>
+                    <p>给你的国家一张脸，领袖、将军、大臣。</p>
+                </div>
+            </div>
+
+            <div id="decision" class="tab-content" style="display:none;">
+                <div class="card">
+                    <h2>决议编辑</h2>
+                    <p>决议是玩家主动出手的地方，限时行动、持续项目、国家任务。</p>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>国家Tag</label>
-            <select id="editTag">
-                <option value="SOV">苏联 SOV</option>
-                <option value="GER">德国 GER</option>
-                <option value="USA">美国 USA</option>
-                <option value="CHI">中国 CHI</option>
-            </select>
+        <div class="preview">
+            <h2 style="color:#8b6914; margin-bottom:15px;">实时预览</h2>
+            <div style="background:#1a1a2e; border-radius:8px; padding:20px; color:#fff; text-align:center;">
+                <p style="color:#999; margin-top:50px;">在这里预览游戏内效果</p>
+            </div>
+            <div style="margin-top:20px;">
+                <button class="btn" style="width:100%;">在游戏里查看</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>国策ID（自动生成）</label>
-            <input type="text" id="editId" readonly value="SOV_red_camouflage_1">
-        </div>
-        <div class="form-group">
-            <label>成本（天）</label>
-            <input type="number" id="editCost" value="10">
-        </div>
-        <div class="form-group">
-            <label>添加效果（选一个点添加）</label>
-            <select id="effectSelect">
-                <option value="">-- 选择效果 --</option>
-                <option value="political_power = 150">获得150政治点</option>
-                <option value="stability_factor = 0.1">+10%稳定度</option>
-                <option value="war_support = 0.1">+10%战争支持</option>
-                <option value="production_speed_by_factory = 0.1">+10%军工生产速度</option>
-                <option value="research_speed_factor = 0.1">+10%研究速度</option>
-            </select>
-            <button onclick="addEffect()" style="margin-top:5px;">添加到效果</button>
-        </div>
-        <div class="form-group">
-            <label>效果代码</label>
-            <textarea id="editEffect">political_power = 150</textarea>
-        </div>
-        <button onclick="saveNode()">保存修改</button>
-        <button class="secondary" onclick="closeEditor()" style="background:#333;">关闭</button>
     </div>
 
     <script>
-        let focuses = [
-            { id: 'SOV_red_camouflage_1', name: '秘密会议', tag: 'SOV', cost: 10, effect: 'political_power = 150', x: 100, y: 100 }
-        ];
-        let selectedNode = null;
-        let dragging = null;
-        let offsetX, offsetY;
+        let focuses = [];
 
-        function addFocus() {
-            const name = prompt('国策名字：');
-            if (!name) return;
-            const tag = document.getElementById('editTag').value;
-            const id = tag + '_' + name.replace(/\s+/g, '_').toLowerCase() + '_' + focuses.length;
-            const x = 100 + focuses.length * 150;
-            const y = 100 + Math.random() * 200;
-            focuses.push({ id, name, tag, cost: 10, effect: '', x, y });
-            renderCanvas();
-        }
-
-        function renderCanvas() {
-            const canvas = document.getElementById('canvas');
-            canvas.innerHTML = '';
-            focuses.forEach((f, i) => {
-                const node = document.createElement('div');
-                node.className = 'focus-node';
-                node.style.left = f.x + 'px';
-                node.style.top = f.y + 'px';
-                node.dataset.index = i;
-                node.innerHTML = `<div class="focus-icon">★</div><div class="focus-name">${f.name}</div>`;
-                node.onmousedown = startDrag;
-                node.ondblclick = () => editNode(f);
-                canvas.appendChild(node);
-            });
-        }
-
-        function startDrag(e) {
-            e.preventDefault();
-            const node = e.target.closest('.focus-node');
-            dragging = parseInt(node.dataset.index);
-            offsetX = e.clientX - focuses[dragging].x;
-            offsetY = e.clientY - focuses[dragging].y;
-            node.classList.add('dragging');
-            document.onmousemove = drag;
-            document.onmouseup = stopDrag;
-        }
-
-        function drag(e) {
-            if (dragging === null) return;
-            focuses[dragging].x = e.clientX - offsetX;
-            focuses[dragging].y = e.clientY - offsetY;
-            renderCanvas();
-        }
-
-        function stopDrag() {
-            dragging = null;
-            document.onmousemove = null;
-            document.onmouseup = null;
-        }
-
-        function editNode(data) {
-            selectedNode = data;
-            document.getElementById('editName').value = data.name;
-            document.getElementById('editTag').value = data.tag;
-            document.getElementById('editId').value = data.id;
-            document.getElementById('editCost').value = data.cost;
-            document.getElementById('editEffect').value = data.effect;
-            document.getElementById('editorPanel').classList.add('show');
-        }
-
-        function closeEditor() {
-            document.getElementById('editorPanel').classList.remove('show');
+        function showTab(tab) {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.getElementById(tab).style.display = 'block';
         }
 
         function addEffect() {
             const effect = document.getElementById('effectSelect').value;
             if (!effect) return;
-            const old = document.getElementById('editEffect').value;
-            document.getElementById('editEffect').value = old + (old ? '\n' : '') + effect;
+            const old = document.getElementById('focusEffect').value;
+            document.getElementById('focusEffect').value = old + (old ? '\n' : '') + effect;
         }
 
-        function saveNode() {
-            if (!selectedNode) return;
-            selectedNode.name = document.getElementById('editName').value;
-            selectedNode.tag = document.getElementById('editTag').value;
-            selectedNode.id = document.getElementById('editTag').value + '_' + document.getElementById('editName').value.replace(/\s+/g, '_').toLowerCase();
-            selectedNode.cost = document.getElementById('editCost').value;
-            selectedNode.effect = document.getElementById('editEffect').value;
-            renderCanvas();
-            closeEditor();
+        function addFocus() {
+            const name = document.getElementById('focusName').value.trim();
+            const tag = document.getElementById('focusTag').value;
+            const cost = document.getElementById('focusCost').value;
+            const effect = document.getElementById('focusEffect').value.trim();
+            if (!name) { alert('请输入国策名字'); return; }
+            const id = tag + '_' + name.replace(/\s+/g, '_').toLowerCase();
+            focuses.push({ id, name, tag, cost, effect });
+            document.getElementById('focusList').innerHTML += `<div style="padding:10px; background:#faf8f3; border-radius:6px; margin-bottom:8px;">${name} (${id})</div>`;
+            alert('国策添加成功！');
         }
-
-        function generateCode() {
-            let code = 'focus_tree = {\n';
-            code += `\tname = "${focuses[0].tag}_focus_tree"\n`;
-            code += '\tcountry = { factor = 1 }\n';
-            code += '\tdefault = no\n\n';
-            focuses.forEach((f, i) => {
-                code += `\tfocus = {\n`;
-                code += `\t\tid = ${f.id}\n`;
-                code += `\t\ticon = generic_intelligence\n`;
-                code += `\t\tx = ${Math.round(f.x / 150)}\n\t\ty = ${Math.round(f.y / 100)}\n\t\tcost = ${f.cost}\n`;
-                code += `\t\tcompletion_reward = {\n`;
-                f.effect.split('\n').forEach(e => code += `\t\t\t${e}\n`);
-                code += `\t\t}\n\t}\n\n`;
-            });
-            code += '}';
-            window._code = code;
-            alert('代码生成完成！点下载保存');
-        }
-
-        function downloadCode() {
-            if (!window._code) generateCode();
-            const blob = new Blob([window._code], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'focus_tree.txt';
-            a.click();
-        }
-
-        renderCanvas();
     </script>
 </body>
 </html>
