@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOI4 Mod 编辑器 - 免费版</title>
+    <title>HOI4 Mod 编辑器</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; }
@@ -53,7 +53,7 @@
 <body>
     <div id="homePage">
         <div class="topbar">
-            <h1>🔨 钢之工坊免费版</h1>
+            <h1>🔨 HOI4 Mod 编辑器</h1>
         </div>
         <div class="page">
             <h2>我的项目</h2>
@@ -86,11 +86,11 @@
                     </div>
                     <div class="update">更新于：2026/10/23</div>
                 </div>
-                <div class="project-card new-project">
+                <div class="project-card new-project" onclick="createNewProject()">
                     <div class="icon">+</div>
                     <div>新建空项目</div>
                 </div>
-                <div class="project-card new-project">
+                <div class="project-card new-project" onclick="importMod()">
                     <div class="icon">📤</div>
                     <div>导入已有mod</div>
                 </div>
@@ -100,7 +100,7 @@
 
     <div id="editorPage" class="editor-page">
         <div class="topbar">
-            <h1>🔨 红色伪装</h1>
+            <h1 id="projectTitle">🔨 红色伪装</h1>
             <button class="btn secondary" onclick="goHome()">← 返回项目列表</button>
             <button class="btn secondary">导入mod文件</button>
             <button class="btn" style="margin-left:auto;">导出mod (ZIP)</button>
@@ -288,6 +288,17 @@
         function goHome() {
             document.getElementById('editorPage').style.display = 'none';
             document.getElementById('homePage').style.display = 'block';
+        }
+
+        function createNewProject() {
+            const name = prompt('输入新项目名字：');
+            if (name) {
+                alert('新项目「' + name + '」创建成功！\n（演示版暂时只有红色伪装项目能进编辑）');
+            }
+        }
+
+        function importMod() {
+            alert('导入mod功能：选择你本地的mod文件夹，自动解析里面的文件。');
         }
 
         function showTab(tab) {
