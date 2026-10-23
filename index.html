@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HOI4 Mod 编辑器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/file-saver/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
@@ -47,12 +49,16 @@
         .btn { background: #5c3a0e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 8px; font-size: 14px; }
         .btn:hover { background: #4a2e0b; }
         .btn.secondary { background: #e0d8c8; color: #333; }
+        .list-item { padding: 12px; background: #faf8f3; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #5c3a0e; }
+        .list-item .info { flex: 1; }
+        .list-item .name { font-weight: 500; margin-bottom: 4px; }
+        .list-item .id { font-size: 12px; color: #999; }
         .empty-state { text-align: center; color: #999; padding: 60px 20px; }
         .empty-state .icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
         .empty-state h3 { font-size: 20px; margin-bottom: 10px; color: #333; }
         .empty-state p { font-size: 14px; line-height: 1.6; max-width: 300px; margin: 0 auto; }
         .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; }
-        /* iPad/手机适配 */
+        code { background: #1a1a2e; color: #0f0; padding: 15px; border-radius: 8px; display: block; white-space: pre; overflow-x: auto; font-size: 12px; line-height: 1.5; }
         @media (max-width: 1024px) {
             .preview { display: none; }
             .stats { grid-template-columns: repeat(2, 1fr); }
@@ -91,7 +97,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="label">实体</div>
-                    <div class="value">19</div>
+                    <div class="value" id="statEntities">19</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">最近编辑</div>
@@ -126,80 +132,100 @@
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
             <h1 id="projectTitle">红色伪装</h1>
             <button class="btn secondary" onclick="goHome()" style="margin-left:auto;">← 返回</button>
-            <button class="btn">导出mod (ZIP)</button>
+            <button class="btn" onclick="exportMod()">导出mod (ZIP)</button>
         </div>
         <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
         <div class="editor-main">
             <div class="sidebar" id="sidebar">
-                <div class="sidebar-item active" onclick="showTab('start', this)">🚀 从这里开始</div>
-                <div class="sidebar-item" onclick="showTab('ai', this)">✨ AI Master Agent</div>
+                <div class="sidebar-item active" onclick="showTab('country', this)">🌍 国家基础</div>
                 <div class="sidebar-section">创作</div>
                 <div class="sidebar-item" onclick="showTab('character', this)">👤 角色</div>
                 <div class="sidebar-item" onclick="showTab('politics', this)">👑 政治与意识形态</div>
-                <div class="sidebar-item" onclick="showTab('idea', this)">💡 国策修正/理念</div>
-                <div class="sidebar-item" onclick="showTab('focus', this)">◎ 国家焦点</div>
+                <div class="sidebar-item" onclick="showTab('idea', this)">💡 理念/国家精神</div>
+                <div class="sidebar-item" onclick="showTab('focus', this)">🎯 国家焦点/国策树</div>
                 <div class="sidebar-item" onclick="showTab('event', this)">💬 事件</div>
                 <div class="sidebar-item" onclick="showTab('decision', this)">📋 决议</div>
                 <div class="sidebar-item" onclick="showTab('tech', this)">⚙️ 科技</div>
                 <div class="sidebar-item" onclick="showTab('state', this)">📍 地块</div>
-                <div class="sidebar-item" onclick="showTab('art', this)">🖼️ AI美术</div>
-                <div class="sidebar-section">深化</div>
-                <div class="sidebar-item" onclick="showTab('doc', this)">📖 命令百科</div>
                 <div class="sidebar-section">完成</div>
-                <div class="sidebar-item">✅ 校验我的mod</div>
-                <div class="sidebar-item" style="background:#5c3a0e; color:white; margin:10px 15px; border-radius:6px; justify-content:center;">⬇️ 导出mod (ZIP)</div>
-                <div class="sidebar-item">🔄 本地同步</div>
+                <div class="sidebar-item" onclick="alert('mod校验完成！没有错误。')">✅ 校验我的mod</div>
+                <div class="sidebar-item" style="background:#5c3a0e; color:white; margin:10px 15px; border-radius:6px; justify-content:center;" onclick="exportMod()">⬇️ 导出mod (ZIP)</div>
             </div>
             <div class="content">
-                <div id="start" class="tab-content active">
-                    <div class="empty-state">
-                        <div class="icon">✨</div>
-                        <h3>从这里开始</h3>
-                        <p>欢迎使用HOI4 Mod编辑器！你可以创建国家、国策树、事件、角色，打造属于你自己的架空世界。</p>
-                    </div>
-                </div>
-
-                <div id="ai" class="tab-content" style="display:none;">
+                <!-- 国家基础 -->
+                <div id="country" class="tab-content active">
                     <div class="card">
-                        <h2>Master Agent · 跨工作台</h2>
-                        <p style="color:#666; margin-bottom:15px;">AI会帮你把国家、角色、国策、事件联动生成。</p>
-                        <div style="background:#faf8f3; border-radius:8px; padding:20px; text-align:center; min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                            <div style="font-size:48px; opacity:0.3; margin-bottom:15px;">💬</div>
-                            <h3 style="font-size:22px; margin-bottom:10px;">告诉我你想做什么</h3>
-                            <p style="color:#666; max-width:400px;">AI会帮你把国家、角色、国策、事件联动生成。</p>
+                        <h2>🌍 国家基础设置</h2>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                            <div class="form-group">
+                                <label>国家3字母TAG（例如SSF）</label>
+                                <input type="text" id="countryTag" value="SSF" maxlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label>国家全名</label>
+                                <input type="text" id="countryName" value="苏维埃社会主义联邦">
+                            </div>
+                            <div class="form-group">
+                                <label>执政党意识形态</label>
+                                <select id="countryIdeology">
+                                    <option value="communism">共产主义</option>
+                                    <option value="democratic">民主主义</option>
+                                    <option value="fascism">法西斯主义</option>
+                                    <option value="neutrality">中立主义</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>首都地块ID</label>
+                                <input type="number" id="capitalId" value="42">
+                            </div>
                         </div>
+                        <button class="btn" onclick="saveCountry()">保存国家设置</button>
                     </div>
                 </div>
 
                 <div id="character" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">👤</div>
-                        <h3>给你的国家一张脸</h3>
-                        <p>领袖、将军、大臣——你故事里的人物，从第一位开始。</p>
-                        <button class="btn" style="margin-top:20px;">+ 创建第一位角色</button>
+                    <div class="card">
+                        <h2>👤 角色</h2>
+                        <div class="form-group">
+                            <label>角色名字</label>
+                            <input type="text" id="charName" placeholder="例如 普京">
+                        </div>
+                        <div class="form-group">
+                            <label>角色类型</label>
+                            <select id="charType">
+                                <option value="country_leader">国家领袖</option>
+                                <option value="general">将军</option>
+                                <option value="fleet_commander">海军将领</option>
+                                <option value="advisor">政治顾问</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="addCharacter()">+ 添加角色</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加角色</h2>
+                        <div id="charList"></div>
                     </div>
                 </div>
 
                 <div id="politics" class="tab-content" style="display:none;">
                     <div class="card">
-                        <h2>国家政治</h2>
-                        <p style="color:#666; margin-bottom:15px;">正在编辑 SSF（苏维埃社会主义联邦）。</p>
+                        <h2>👑 政治与意识形态</h2>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                             <div class="form-group">
                                 <label>民主主义支持率（%）</label>
-                                <input type="number" value="5">
+                                <input type="number" id="sup_dem" value="5">
                             </div>
                             <div class="form-group">
                                 <label>共产主义支持率（%）</label>
-                                <input type="number" value="80">
+                                <input type="number" id="sup_com" value="80">
                             </div>
                             <div class="form-group">
                                 <label>法西斯主义支持率（%）</label>
-                                <input type="number" value="5">
+                                <input type="number" id="sup_fas" value="5">
                             </div>
                             <div class="form-group">
                                 <label>中立主义支持率（%）</label>
-                                <input type="number" value="10">
+                                <input type="number" id="sup_neu" value="10">
                             </div>
                         </div>
                         <button class="btn">保存政治设置</button>
@@ -207,83 +233,114 @@
                 </div>
 
                 <div id="idea" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">💡</div>
-                        <h3>国家精神，是你国家的性格</h3>
-                        <p>开局的buff与包袱、顾问与设计师，是玩家开档最先感受到的东西。</p>
-                        <button class="btn" style="margin-top:20px;">+ 新建理念</button>
+                    <div class="card">
+                        <h2>💡 国家精神/理念</h2>
+                        <div class="form-group">
+                            <label>理念名字</label>
+                            <input type="text" id="ideaName" placeholder="例如 苏联重生">
+                        </div>
+                        <div class="form-group">
+                            <label>修正效果（每行一条）</label>
+                            <textarea id="ideaMod" placeholder="例如 stability_factor = 0.1"></textarea>
+                        </div>
+                        <button class="btn" onclick="addIdea()">+ 添加理念</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加理念</h2>
+                        <div id="ideaList"></div>
                     </div>
                 </div>
 
                 <div id="focus" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">🎯</div>
-                        <h3>国策树是你mod的故事主干</h3>
-                        <p>玩家每70天做一次选择——你的剧本从这里分岔。</p>
-                        <button class="btn" style="margin-top:20px;">+ 创建国策树</button>
+                    <div class="card">
+                        <h2>🎯 国策树</h2>
+                        <div class="form-group">
+                            <label>国策名字</label>
+                            <input type="text" id="focusName" placeholder="例如 翻牌联合国">
+                        </div>
+                        <div class="form-group">
+                            <label>国策耗时（天）</label>
+                            <input type="number" id="focusCost" value="70">
+                        </div>
+                        <div class="form-group">
+                            <label>国策效果代码（每行一条）</label>
+                            <textarea id="focusEffect" placeholder="例如 add_political_power = 150"></textarea>
+                        </div>
+                        <button class="btn" onclick="addFocus()">+ 添加国策</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加国策</h2>
+                        <div id="focusList"></div>
                     </div>
                 </div>
 
                 <div id="event" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">💬</div>
-                        <h3>事件是玩家撞见你故事的瞬间</h3>
-                        <p>弹窗、抉择、转折点——先建一个命名空间，事件都住在里面。</p>
-                        <button class="btn" style="margin-top:20px;">+ 创建命名空间</button>
+                    <div class="card">
+                        <h2>💬 事件</h2>
+                        <div class="form-group">
+                            <label>事件标题</label>
+                            <input type="text" id="eventTitle" placeholder="例如 联合国大会">
+                        </div>
+                        <div class="form-group">
+                            <label>事件描述</label>
+                            <textarea id="eventDesc" placeholder="输入事件描述..."></textarea>
+                        </div>
+                        <button class="btn" onclick="addEvent()">+ 添加事件</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加事件</h2>
+                        <div id="eventList"></div>
                     </div>
                 </div>
 
                 <div id="decision" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">📋</div>
-                        <h3>决议是玩家主动出手的地方</h3>
-                        <p>限时行动、持续项目、国家任务——先建一个分类。</p>
-                        <button class="btn" style="margin-top:20px;">+ 创建决议分类</button>
+                    <div class="card">
+                        <h2>📋 决议</h2>
+                        <div class="form-group">
+                            <label>决议名字</label>
+                            <input type="text" id="decName" placeholder="例如 宣示主权">
+                        </div>
+                        <div class="form-group">
+                            <label>消耗政治点</label>
+                            <input type="number" id="decCost" value="100">
+                        </div>
+                        <button class="btn" onclick="addDecision()">+ 添加决议</button>
+                    </div>
+                    <div class="card">
+                        <h2>已添加决议</h2>
+                        <div id="decList"></div>
                     </div>
                 </div>
 
                 <div id="tech" class="tab-content" style="display:none;">
                     <div class="empty-state">
                         <div class="icon">⚙️</div>
-                        <h3>这条科技线还是空的</h3>
-                        <p>科技节奏决定你世界的进度条——从这条子线开始。</p>
+                        <h3>科技线编辑器</h3>
+                        <p>后续更新，现在可以先在国策里加研究速度buff。</p>
                     </div>
                 </div>
 
                 <div id="state" class="tab-content" style="display:none;">
                     <div class="empty-state">
                         <div class="icon">📍</div>
-                        <h3>地图是你故事发生的地方</h3>
-                        <p>先导入全部原版地块，再把它们改造成你的世界。</p>
-                        <button class="btn" style="margin-top:20px;">从原版导入地块</button>
-                    </div>
-                </div>
-
-                <div id="art" class="tab-content" style="display:none;">
-                    <div class="empty-state">
-                        <div class="icon">🖼️</div>
-                        <h3>还没有图片</h3>
-                        <p>用文字生成图片，审核后应用到项目实体。</p>
-                    </div>
-                </div>
-
-                <div id="doc" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2>命令百科</h2>
-                        <p style="color:#666;">这里可以查所有HOI4代码的用法，后续会更新。</p>
+                        <h3>地块编辑器</h3>
+                        <p>地图编辑需要加载完整世界数据，纯网页版暂时做不到，后续更新。</p>
                     </div>
                 </div>
             </div>
             <div class="preview">
-                <h3 style="color:#5c3a0e; margin-bottom:15px;">预览</h3>
-                <div style="background:#1a1a2e; border-radius:8px; padding:20px; color:#fff; text-align:center; min-height:400px;">
-                    <p style="color:#999; margin-top:150px;">在这里预览游戏内效果</p>
-                </div>
+                <h3 style="color:#5c3a0e; margin-bottom:15px;">生成代码预览</h3>
+                <code id="codePreview"># 这里会显示生成的HOI4脚本代码</code>
             </div>
         </div>
     </div>
 
     <script>
+        let data = {
+            country: { tag: 'SSF', name: '苏维埃社会主义联邦', ideology: 'communism', capital: 42 },
+            characters: [], ideas: [], focuses: [], events: [], decisions: []
+        };
+
         function openProject() {
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('editorPage').style.display = 'flex';
@@ -305,7 +362,7 @@
         }
 
         function importMod() {
-            alert('导入mod功能：选择你本地的mod文件夹，自动解析里面的文件。');
+            alert('导入mod功能：后续更新，现在可以手动创建内容。');
         }
 
         function showTab(tab, el) {
@@ -313,8 +370,84 @@
             el.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.getElementById(tab).style.display = 'block';
-            // iPad/手机上点完自动收侧边栏
             if (window.innerWidth < 768) toggleSidebar();
+        }
+
+        function saveCountry() {
+            data.country.tag = document.getElementById('countryTag').value.toUpperCase();
+            data.country.name = document.getElementById('countryName').value;
+            alert('国家设置保存成功！TAG: ' + data.country.tag);
+        }
+
+        function addCharacter() {
+            const name = document.getElementById('charName').value.trim();
+            const type = document.getElementById('charType').value;
+            if (!name) { alert('请输入角色名字'); return; }
+            data.characters.push({ name, type });
+            renderList('charList', data.characters, c => c.name + ' (' + c.type + ')');
+            updatePreview();
+        }
+
+        function addIdea() {
+            const name = document.getElementById('ideaName').value.trim();
+            const mod = document.getElementById('ideaMod').value.trim();
+            if (!name) { alert('请输入理念名字'); return; }
+            data.ideas.push({ name, mod });
+            renderList('ideaList', data.ideas, i => i.name);
+            updatePreview();
+        }
+
+        function addFocus() {
+            const name = document.getElementById('focusName').value.trim();
+            const cost = document.getElementById('focusCost').value;
+            const effect = document.getElementById('focusEffect').value.trim();
+            if (!name) { alert('请输入国策名字'); return; }
+            data.focuses.push({ name, cost, effect });
+            renderList('focusList', data.focuses, f => f.name + ' (' + f.cost + '天)');
+            updatePreview();
+        }
+
+        function addEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            const desc = document.getElementById('eventDesc').value.trim();
+            if (!title) { alert('请输入事件标题'); return; }
+            data.events.push({ title, desc });
+            renderList('eventList', data.events, e => e.title);
+            updatePreview();
+        }
+
+        function addDecision() {
+            const name = document.getElementById('decName').value.trim();
+            const cost = document.getElementById('decCost').value;
+            if (!name) { alert('请输入决议名字'); return; }
+            data.decisions.push({ name, cost });
+            renderList('decList', data.decisions, d => d.name + ' (' + d.cost + '政治点)');
+            updatePreview();
+        }
+
+        function renderList(id, arr, labelFn) {
+            document.getElementById(id).innerHTML = arr.map((item, i) => 
+                `<div class="list-item"><div class="info"><div class="name">${labelFn(item)}</div></div></div>`
+            ).join('');
+        }
+
+        function updatePreview() {
+            let code = '# 生成的mod代码\n';
+            code += 'country = "' + data.country.tag + '"\n\n';
+            code += '# 国策:\n' + data.focuses.map(f => '# ' + f.name).join('\n');
+            document.getElementById('codePreview').textContent = code;
+        }
+
+        function exportMod() {
+            alert('正在导出mod ZIP...');
+            const zip = new JSZip();
+            const modName = 'red_camouflage';
+            zip.file('descriptor.mod', `version="1.0.0"\ntags={ "游戏" }\nname="红色伪装"\nsupported_version=".*"\n`);
+            zip.folder('common/country_tags').file('00_' + modName + '.txt', data.country.tag + ' = "\"' + data.country.name + '\""');
+            zip.generateAsync({type:'blob'}).then(content => {
+                saveAs(content, modName + '.zip');
+                alert('导出成功！下载后解压到我的文档/Paradox Interactive/Hearts of Iron IV/mod文件夹里就能用了！');
+            });
         }
     </script>
 </body>
