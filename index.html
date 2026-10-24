@@ -208,7 +208,11 @@
 
     <script>
         let projects = [];
-        try { projects = JSON.parse(localStorage.getItem('hoi_projects') || '[]'); } catch(e) { projects = []; }
+        try {
+            const raw = JSON.parse(localStorage.getItem('hoi_projects') || '[]');
+            projects = Array.isArray(raw) ? raw.filter(p => p && p.name) : [];
+            localStorage.setItem('hoi_projects', JSON.stringify(projects));
+        } catch(e) { projects = []; }
         let curProject = null;
         function showLogin() { document.getElementById('landingPage').style.display='none'; document.getElementById('loginPage').style.display='block'; }
         function backLanding() { document.getElementById('loginPage').style.display='none'; document.getElementById('landingPage').style.display='block'; }
@@ -227,9 +231,12 @@
             if (!projects.length) { list.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">还没有项目，点右上角新建开始创作</div>'; return; }
             list.innerHTML = '';
             projects.forEach((p, idx) => {
+                if (!p || !p.name) return; // 过滤掉损坏的空气项目
+                const tags = Array.isArray(p.tags) ? p.tags : [];
+                const countries = Array.isArray(p.countries) ? p.countries : [];
                 const d = document.createElement('div');
                 d.className = 'proj-item';
-                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+p.tags.join('、')+' · '+p.countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
+                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+tags.join('、')+' · '+countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
                 d.querySelector('button').onclick = (e) => { e.stopPropagation(); openEditor(idx); };
                 d.onclick = () => openEditor(idx);
                 list.appendChild(d);
