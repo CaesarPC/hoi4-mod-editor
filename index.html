@@ -88,13 +88,15 @@
                 <div class="item" data-tab="focus">国策树</div>
                 <div class="item" data-tab="event">事件</div>
                 <div class="item" data-tab="dec">决议</div>
+                <div class="sec">系统</div>
+                <div class="item" data-tab="settings">设置</div>
             </div>
             <div class="content">
                 <div id="ai" class="tab">
                     <div style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">AI 助手（已接Llama 3.3 70B）</h3>
+                        <h3 style="margin-bottom:15px;">AI 助手</h3>
                         <div style="height:300px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:10px;background:#faf8f3;" id="chatBox">
-                            <div style="color:#666;">你好！我是AI助手，我能读你当前项目的所有内容，输入你的mod世界观，我帮你生成国策、事件、角色，或者回答你关于mod制作的问题。</div>
+                            <div style="color:#666;">你好！我是AI助手，我能读你当前项目的所有内容，输入你的mod世界观，我帮你生成国策、事件、角色。</div>
                         </div>
                         <div style="display:flex;gap:10px;">
                             <input id="chatInput" placeholder="输入你的问题或世界观描述..." style="flex:1;">
@@ -163,6 +165,15 @@
                     </div>
                     <div style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加决议</h3><div id="declist"></div></div>
                 </div>
+                <div id="settings" class="tab" style="display:none;">
+                    <div style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">设置</h3>
+                        <div class="form"><label>自定义API Key（可选，填了就用你自己的DeepSeek/OpenAI兼容接口，不填用默认免费模型）</label><input id="setApiKey" type="password" placeholder="sk-..."></div>
+                        <div class="form"><label>API接口地址</label><input id="setApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions"></div>
+                        <div class="form"><label>自定义AI系统提示词</label><textarea id="setSystemPrompt" style="height:100px;" placeholder="你是专业HOI4 mod编剧..."></textarea></div>
+                        <button class="btn" id="saveSettingsBtn">保存设置</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -175,7 +186,7 @@
             <div class="form"><label>国家TAG（3字母）</label><input id="npTag" placeholder="SSF" maxlength="3"></div>
             <div class="form"><label>国家全名</label><input id="npCname" placeholder="苏维埃社会主义联邦"></div>
         </div>
-        <div class="form"><label>简单世界观描述（AI会基于这个生成内容）</label><textarea id="npDesc" placeholder="例如 1991年苏共假装解体，2024年回归..."></textarea></div>
+        <div class="form"><label>简单世界观描述</label><textarea id="npDesc" placeholder="例如 1991年苏共假装解体，2024年回归..."></textarea></div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
             <button class="btn sec" id="npCancel">取消</button>
             <button class="btn" id="npOk">创建项目</button>
@@ -186,11 +197,15 @@
         const API = 'https://hoi4-mod-editor.9dbcdc0ced2b5605508bfbd8d950042e.workers.dev';
         let projects = [];
         let cur = null;
+        let settings = JSON.parse(localStorage.getItem('hoi_settings') || '{}');
         function load() {
+            document.getElementById('setApiKey').value = settings.apiKey || '';
+            document.getElementById('setApiUrl').value = settings.apiUrl || '';
+            document.getElementById('setSystemPrompt').value = settings.systemPrompt || '';
             const s = localStorage.getItem('hoi_proj_v3');
             if (s) projects = JSON.parse(s);
             if (!projects.length) {
-                projects = [{"id":"p1", "name":"红色伪装", "data":{"tag":"SSF", "cname":"苏维埃社会主义联邦", "chars":[{"name":"斯大林","type":"领袖"}]," ideas":[{"name":"苏联重生"}],"focuses":[{"name":"翻牌联合国","cost":70}],"events":[{"title":"联合国大会"}],"decs":[]}}];
+                projects = [{"id":"p1", "name":"红色伪装", "data":{"tag":"SSF", "cname":"苏维埃社会主义联邦", "chars":[{"name":"斯大林"}],"ideas":[{"name":"苏联重生"}],"focuses":[{"name":"翻牌联合国","cost":70}],"events":[{"title":"联合国大会"}],"decs":[]}}];
                 save();
             }
             renderhome();
@@ -222,6 +237,13 @@
             nc.onclick = () => { document.getElementById('newProjModal').style.display='block'; document.getElementById('modalOv').style.display='block'; };
             g.appendChild(nc);
         }
+        document.getElementById('saveSettingsBtn').onclick = () => {
+            settings.apiKey = document.getElementById('setApiKey').value.trim();
+            settings.apiUrl = document.getElementById('setApiUrl').value.trim();
+            settings.systemPrompt = document.getElementById('setSystemPrompt').value.trim();
+            localStorage.setItem('hoi_settings', JSON.stringify(settings));
+            alert('设置已保存！');
+        };
         document.getElementById('npCancel').onclick = () => { document.getElementById('newProjModal').style.display='none'; document.getElementById('modalOv').style.display='none'; };
         document.getElementById('npOk').onclick = () => {
             const name = document.getElementById('npName').value.trim();
@@ -267,16 +289,21 @@
             chatBox.innerHTML += '<div style="margin:8px 0;color:#666;">AI正在思考...</div>';
             document.getElementById('chatInput').value = '';
             try {
-                const res = await fetch(API+'/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:msg})});
-                const data = await res.json();
-                chatBox.lastChild.textContent = 'AI：生成完成！已添加'+data.focuses.length+'个国策、'+data.events.length+'个事件、'+data.ideas.length+'个理念。';
-                if (data.focuses) cur.data.focuses = cur.data.focuses.concat(data.focuses);
-                if (data.events) cur.data.events = cur.data.events.concat(data.events);
-                if (data.ideas) cur.data.ideas = cur.data.ideas.concat(data.ideas);
-                if (data.characters) cur.data.chars = cur.data.chars.concat(data.characters);
-                renderall(); save();
+                if (settings.apiKey) {
+                    const res = await fetch(settings.apiUrl, {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+settings.apiKey}, body:JSON.stringify({model:'deepseek-chat', messages:[{role:'system', content:settings.systemPrompt || '你是HOI4 mod内容生成器，输出JSON格式的国策、事件、角色。'},{role:'user', content:msg}], temperature:0.7})});
+                    const data = await res.json();
+                    chatBox.lastChild.textContent = 'AI：' + data.choices[0].message.content;
+                } else {
+                    const res = await fetch(API+'/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:msg})});
+                    const data = await res.json();
+                    chatBox.lastChild.textContent = 'AI：生成完成！已添加'+data.focuses.length+'个国策、'+data.events.length+'个事件、'+data.ideas.length+'个理念。';
+                    if (data.focuses) cur.data.focuses = cur.data.focuses.concat(data.focuses);
+                    if (data.events) cur.data.events = cur.data.events.concat(data.events);
+                    if (data.ideas) cur.data.ideas = cur.data.ideas.concat(data.ideas);
+                    renderall(); save();
+                }
             } catch(e) {
-                chatBox.lastChild.textContent = 'AI：生成失败，重试一次';
+                chatBox.lastChild.textContent = 'AI：生成失败，检查API设置';
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         };
