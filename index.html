@@ -8,7 +8,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.2s ease; }
         body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; }
-        .topbar { background: #fff; padding: 14px 24px; display: flex; align-items: center; border-bottom: 1px solid #eee; height:64px; position:sticky; top:0; z-index:50; }
+        .topbar { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); padding: 14px 24px; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); height:64px; position:sticky; top:0; z-index:50; }
         .logo { display:flex; align-items:center; gap:12px; }
         .logo-icon { width:40px; height:40px; background:#5c3a0e; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; }
         .logo-text .t1 { font-size:18px; font-weight:bold; color:#333; }
@@ -177,7 +177,7 @@
     </div>
 
     <div class="modal-mask" id="modalMask"></div>
-    <div class="modal" id="projModal">
+    <div class="modal" id="projModal" style="display:none;">
         <h3>新建空项目</h3>
         <div class="form"><label>模组名称</label><input id="npName"></div>
         <div class="form"><label>模组标签（可多选）</label></div>
@@ -196,7 +196,7 @@
             <button class="btn sm" onclick="createProj()">创建</button>
         </div>
     </div>
-    <div class="modal" id="countryModal">
+    <div class="modal" id="countryModal" style="display:none;">
         <h3>添加新国家</h3>
         <div class="form"><label>国家TAG（3字母）</label><input id="ncTag" maxlength="3"></div>
         <div class="form"><label>国家名称</label><input id="ncName"></div>
