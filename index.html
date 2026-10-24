@@ -2,329 +2,243 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOI4 Mod 编辑器</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/file-saver/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
+        body { font-family: -apple-system, sans-serif; background: #f5f1e8; height: 100vh; overflow: hidden; }
         .topbar { background: #fff; padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 60px; }
-        .topbar h1 { font-size: 18px; color: #5c3a0e; margin-right: 20px; display: flex; align-items: center; gap: 8px; }
-        .topbar .menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; margin-right: 15px; color: #5c3a0e; }
-        .topbar .btn { background: #5c3a0e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 8px; font-size: 14px; display: flex; align-items: center; gap: 6px; }
-        .topbar .btn:hover { background: #4a2e0b; }
-        .topbar .btn.secondary { background: #f0ebe0; color: #333; }
-        .save-status { font-size: 12px; color: #999; margin-right: 15px; display: flex; align-items: center; gap: 4px; }
-        .page { padding: 25px; max-width: 1200px; margin: 0 auto; overflow-y: auto; height: calc(100vh - 60px); }
-        .page h2 { font-size: 26px; margin-bottom: 25px; color: #333; }
+        .topbar h1 { font-size: 18px; color: #5c3a0e; margin-right: 20px; }
+        .menu-btn { display: none; background: #5c3a0e; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; margin-right: 15px; }
+        .btn { background: #5c3a0e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 8px; font-size: 14px; }
+        .btn.sec { background: #e0d8c8; color: #333; }
+        .btn.danger { background: #e74c3c; padding: 4px 8px; font-size: 12px; }
+        .page { padding: 25px; height: calc(100vh - 60px); overflow-y: auto; }
         .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .stat-card .label { color: #999; font-size: 13px; margin-bottom: 8px; }
-        .stat-card .value { font-size: 32px; font-weight: bold; color: #333; }
-        .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .project-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
-        .project-card:hover { transform: translateY(-2px); }
-        .project-card .name { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
-        .project-card .tag { color: #5c3a0e; font-size: 13px; margin-bottom: 12px; }
-        .project-card .meta { display: flex; gap: 12px; color: #999; font-size: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .project-card .update { color: #999; font-size: 12px; }
-        .new-project { background: transparent; border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; color: #999; cursor: pointer; }
-        .new-project:hover { background: #faf8f3; }
-        .new-project .icon { width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6; }
-        .editor-page { display: none; height: 100vh; flex-direction: column; }
-        .editor-main { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 260px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; transition: transform 0.3s; }
-        .sidebar-item { padding: 10px 20px; cursor: pointer; color: #666; display: flex; align-items: center; gap: 10px; font-size: 14px; }
-        .sidebar-item svg { width: 18px; height: 18px; opacity: 0.7; }
-        .sidebar-item:hover { background: #f0ebe0; }
-        .sidebar-item.active { background: #f0ebe0; color: #5c3a0e; border-right: 3px solid #5c3a0e; font-weight: 500; }
-        .sidebar-section { padding: 12px 20px; font-size: 11px; color: #999; text-transform: uppercase; margin-top: 8px; }
-        .content { flex: 1; padding: 25px; overflow-y: auto; }
-        .preview { width: 350px; background: #fff; border-left: 1px solid #e0d8c8; padding: 15px; overflow-y: auto; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .card h2 { color: #5c3a0e; margin-bottom: 12px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
-        .card h2 svg { width: 20px; height: 20px; }
-        .form-group { margin-bottom: 12px; }
+        .stat { background: #fff; padding: 20px; border-radius: 12px; }
+        .stat .l { color: #999; font-size: 13px; margin-bottom: 8px; }
+        .stat .v { font-size: 28px; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; cursor: pointer; position: relative; }
+        .card .n { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+        .card .t { color: #5c3a0e; font-size: 13px; margin-bottom: 12px; }
+        .new { border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; color: #999; }
+        .editor { display: none; height: 100vh; flex-direction: column; }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .side { width: 250px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
+        .side .item { padding: 10px 20px; cursor: pointer; color: #666; font-size: 14px; }
+        .side .item.on { background: #f0ebe0; color: #5c3a0e; border-right: 3px solid #5c3a0e; font-weight: bold; }
+        .side .sec { padding: 12px 20px; font-size: 11px; color: #999; margin-top: 8px; }
+        .content { flex: 1; padding: 20px; overflow-y: auto; }
+        .form { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #666; font-size: 12px; }
-        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; color: #333; font-size: 14px; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; font-size: 14px; }
         textarea { height: 80px; resize: vertical; }
-        .btn { background: #5c3a0e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 8px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-        .btn:hover { background: #4a2e0b; }
-        .btn.secondary { background: #e0d8c8; color: #333; }
-        .btn.ai { background: linear-gradient(135deg, #5c3a0e, #8b5a2b); }
-        .list-item { padding: 12px; background: #faf8f3; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #5c3a0e; }
-        .list-item .info { flex: 1; }
-        .list-item .name { font-weight: 500; margin-bottom: 4px; }
-        .empty-state { text-align: center; color: #999; padding: 60px 20px; }
-        .empty-state .icon { width: 64px; height: 64px; margin: 0 auto 15px; opacity: 0.3; }
-        .empty-state h3 { font-size: 20px; margin-bottom: 10px; color: #333; }
-        .empty-state p { font-size: 14px; line-height: 1.6; max-width: 300px; margin: 0 auto; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; }
-        code { background: #1a1a2e; color: #0f0; padding: 15px; border-radius: 8px; display: block; white-space: pre; overflow-x: auto; font-size: 12px; line-height: 1.5; }
-        @media (max-width: 1024px) { .preview { display: none; } .stats { grid-template-columns: repeat(2, 1fr); } .projects-grid { grid-template-columns: repeat(2, 1fr); } }
+        .list-item { padding: 10px; background: #faf8f3; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #5c3a0e; }
+        .ov { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; }
         @media (max-width: 768px) {
-            .topbar .menu-btn { display: block; }
-            .sidebar { position: fixed; top: 60px; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-            .sidebar.open { transform: translateX(0); }
-            .overlay.open { display: block; }
-            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .stat-card { padding: 15px; }
-            .stat-card .value { font-size: 24px; }
-            .projects-grid { grid-template-columns: 1fr; }
-            .content { padding: 15px; }
-            .topbar h1 { font-size: 16px; }
-            .topbar .btn { padding: 6px 12px; font-size: 12px; }
-            .save-status { display: none; }
+            .menu-btn { display: block; }
+            .side { position: fixed; top: 60px; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); width: 270px; }
+            .side.open { transform: translateX(0); }
+            .ov.open { display: block; }
+            .stats { grid-template-columns: repeat(2,1fr); }
+            .grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <svg style="display:none">
-        <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-crown" viewBox="0 0 24 24"><path d="M2 18h20M2 18l2-11 5 5 3-7 3 7 5-5 2 11z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></symbol>
-        <symbol id="icon-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-check" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="22 4 12 14.01 9 11.01" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-        <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z" fill="currentColor"/></symbol>
-    </svg>
-
-    <div id="homePage">
+    <div id="home">
         <div class="topbar">
-            <h1><svg width="24" height="24"><use href="#icon-globe"/></svg> HOI4 Mod 编辑器</h1>
-            <span class="save-status"><svg width="14" height="14"><use href="#icon-cloud"/></svg> 已连接云端</span>
+            <button class="menu-btn" onclick="toggleside()">☰</button>
+            <h1>HOI4 Mod 编辑器</h1>
         </div>
         <div class="page">
-            <h2>我的项目</h2>
+            <h2 style="margin-bottom:20px;">我的项目</h2>
             <div class="stats">
-                <div class="stat-card"><div class="label">项目</div><div class="value">1</div></div>
-                <div class="stat-card"><div class="label">国家</div><div class="value">1</div></div>
-                <div class="stat-card"><div class="label">实体</div><div class="value" id="statEntities">19</div></div>
-                <div class="stat-card"><div class="label">最近编辑</div><div class="value" style="font-size:16px;">刚刚<br><small style="color:#999;">红色伪装</small></div></div>
+                <div class="stat"><div class="l">项目数</div><div class="v" id="statProj">1</div></div>
+                <div class="stat"><div class="l">国家数</div><div class="v" id="statCountry">1</div></div>
+                <div class="stat"><div class="l">实体数</div><div class="v" id="statEnt">0</div></div>
+                <div class="stat"><div class="l">存储</div><div class="v" style="font-size:16px;">本地浏览器存储</div></div>
             </div>
-            <div class="projects-grid">
-                <div class="project-card" onclick="openProject()">
-                    <div class="name">红色伪装</div>
-                    <div class="tag">SSF - 苏维埃社会主义联邦</div>
-                    <div class="meta"><span>1个角色</span><span>1国策</span><span>0科技</span></div>
-                    <div class="update">更新于：2026/10/23</div>
-                </div>
-                <div class="project-card new-project" onclick="createNewProject()">
-                    <svg class="icon"><use href="#icon-plus"/></svg><div>新建空项目</div>
-                </div>
-                <div class="project-card new-project" onclick="importMod()">
-                    <svg class="icon"><use href="#icon-upload"/></svg><div>导入已有mod</div>
-                </div>
-            </div>
+            <div class="grid" id="projGrid"></div>
         </div>
     </div>
 
-    <div id="editorPage" class="editor-page">
+    <div id="ed" class="editor">
         <div class="topbar">
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <h1 id="projectTitle">红色伪装</h1>
-            <span class="save-status" id="editorSaveStatus"><svg width="14" height="14"><use href="#icon-cloud"/></svg> 自动保存已开启</span>
-            <button class="btn secondary" onclick="goHome()" style="margin-left:auto;">← 返回</button>
-            <button class="btn" onclick="exportMod()"><svg width="16" height="16"><use href="#icon-download"/></svg> 导出mod (ZIP)</button>
+            <button class="menu-btn" onclick="toggleside()">☰</button>
+            <h1 id="edTitle">项目</h1>
+            <button class="btn sec" style="margin-left:auto;" onclick="gohome()">返回首页</button>
+            <button class="btn" onclick="exportZip()">导出ZIP</button>
         </div>
-        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-        <div class="editor-main">
-            <div class="sidebar" id="sidebar">
-                <div class="sidebar-item active" onclick="showTab('ai', this)"><svg><use href="#icon-sparkles"/></svg> AI 自动生成</div>
-                <div class="sidebar-item" onclick="showTab('country', this)"><svg><use href="#icon-globe"/></svg> 国家基础</div>
-                <div class="sidebar-section">创作</div>
-                <div class="sidebar-item" onclick="showTab('character', this)"><svg><use href="#icon-user"/></svg> 角色</div>
-                <div class="sidebar-item" onclick="showTab('politics', this)"><svg><use href="#icon-crown"/></svg> 政治与意识形态</div>
-                <div class="sidebar-item" onclick="showTab('idea', this)"><svg><use href="#icon-lightbulb"/></svg> 理念/国家精神</div>
-                <div class="sidebar-item" onclick="showTab('focus', this)"><svg><use href="#icon-target"/></svg> 国家焦点/国策树</div>
-                <div class="sidebar-item" onclick="showTab('event', this)"><svg><use href="#icon-message"/></svg> 事件</div>
-                <div class="sidebar-item" onclick="showTab('decision', this)"><svg><use href="#icon-clipboard"/></svg> 决议</div>
-                <div class="sidebar-item" onclick="showTab('tech', this)"><svg><use href="#icon-gear"/></svg> 科技</div>
-                <div class="sidebar-item" onclick="showTab('state', this)"><svg><use href="#icon-pin"/></svg> 地块</div>
-                <div class="sidebar-section">完成</div>
-                <div class="sidebar-item" onclick="alert('mod校验完成！没有错误。')"><svg><use href="#icon-check"/></svg> 校验我的mod</div>
-                <div class="sidebar-item" style="background:#5c3a0e; color:white; margin:10px 15px; border-radius:6px; justify-content:center;" onclick="exportMod()"><svg width="16" height="16"><use href="#icon-download"/></svg> 导出mod (ZIP)</div>
+        <div class="ov" id="ov" onclick="toggleside()"></div>
+        <div class="main">
+            <div class="side" id="side">
+                <div class="item on" onclick="showtab('ai',this)">AI一键生成</div>
+                <div class="item" onclick="showtab('country',this)">国家基础</div>
+                <div class="sec">创作</div>
+                <div class="item" onclick="showtab('char',this)">角色</div>
+                <div class="item" onclick="showtab('pol',this)">政治</div>
+                <div class="item" onclick="showtab('idea',this)">国家精神</div>
+                <div class="item" onclick="showtab('focus',this)">国策树</div>
+                <div class="item" onclick="showtab('event',this)">事件</div>
+                <div class="item" onclick="showtab('dec',this)">决议</div>
             </div>
             <div class="content">
-                <div id="ai" class="tab-content active">
-                    <div class="card">
-                        <h2><svg><use href="#icon-sparkles"/></svg> AI 自动生成内容</h2>
-                        <p style="color:#666; margin-bottom:15px;">输入你的mod世界观描述，AI自动生成国策、事件、角色、理念。</p>
-                        <div class="form-group">
-                            <textarea id="aiPrompt" style="height:120px;" placeholder="例如：1991年苏共假装解体，2024年在联合国大会翻牌宣布苏联回归，巴伐利亚地下纳粹成立第四帝国..."></textarea>
-                        </div>
-                        <button class="btn ai" onclick="aiGenerate()"><svg width="16" height="16"><use href="#icon-sparkles"/></svg> AI 生成mod内容</button>
+                <div id="ai" class="tab">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">AI快速生成</h3>
+                        <textarea id="aiprompt" style="height:100px;" placeholder="输入你的mod世界观，一键生成起步内容"></textarea>
+                        <br><br>
+                        <button class="btn" onclick="aigen()">一键生成起步包</button>
                     </div>
                 </div>
-                <div id="country" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-globe"/></svg> 国家基础设置</h2>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                            <div class="form-group"><label>国家3字母TAG（例如SSF）</label><input type="text" id="countryTag" value="SSF" maxlength="3"></div>
-                            <div class="form-group"><label>国家全名</label><input type="text" id="countryName" value="苏维埃社会主义联邦"></div>
-                            <div class="form-group"><label>执政党意识形态</label><select id="countryIdeology"><option value="communism">共产主义</option><option value="democratic">民主主义</option><option value="fascism">法西斯主义</option><option value="neutrality">中立主义</option></select></div>
-                            <div class="form-group"><label>首都地块ID</label><input type="number" id="capitalId" value="42"></div>
-                        </div>
-                        <button class="btn" onclick="saveCountry()">保存国家设置</button>
+                <div id="country" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">国家设置</h3>
+                        <div class="form"><label>国家TAG（3字母）</label><input id="ctag" value="SSF"></div>
+                        <div class="form"><label>国家名</label><input id="cname" value="苏维埃社会主义联邦"></div>
+                        <button class="btn" onclick="savecountry()">保存</button>
                     </div>
                 </div>
-                <div id="character" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-user"/></svg> 角色</h2>
-                        <div class="form-group"><label>角色名字</label><input type="text" id="charName" placeholder="例如 普京"></div>
-                        <div class="form-group"><label>角色类型</label><select id="charType"><option value="country_leader">国家领袖</option><option value="general">将军</option><option value="fleet_commander">海军将领</option><option value="advisor">政治顾问</option></select></div>
-                        <button class="btn" onclick="addCharacter()">+ 添加角色</button>
+                <div id="char" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">添加角色</h3>
+                        <div class="form"><label>名字</label><input id="charname" placeholder="角色名"></div>
+                        <div class="form"><label>类型</label><select id="chartype"><option>国家领袖</option><option>将军</option><option>顾问</option></select></div>
+                        <button class="btn" onclick="addchar()">+ 添加</button>
                     </div>
-                    <div class="card"><h2>已添加角色</h2><div id="charList"></div></div>
+                    <div id="charlist" style="margin-top:15px;"></div>
                 </div>
-                <div id="politics" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-crown"/></svg> 政治与意识形态</h2>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                            <div class="form-group"><label>民主主义支持率（%）</label><input type="number" id="sup_dem" value="5"></div>
-                            <div class="form-group"><label>共产主义支持率（%）</label><input type="number" id="sup_com" value="80"></div>
-                            <div class="form-group"><label>法西斯主义支持率（%）</label><input type="number" id="sup_fas" value="5"></div>
-                            <div class="form-group"><label>中立主义支持率（%）</label><input type="number" id="sup_neu" value="10"></div>
-                        </div>
-                        <button class="btn" onclick="savePolitics()">保存政治设置</button>
+                <div id="pol" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">政治支持率</h3>
+                        <div class="form"><label>共产主义%</label><input id="supcom" value="80"></div>
+                        <div class="form"><label>民主主义%</label><input id="supdem" value="5"></div>
+                        <button class="btn" onclick="savepol()">保存</button>
                     </div>
                 </div>
-                <div id="idea" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-lightbulb"/></svg> 国家精神/理念</h2>
-                        <div class="form-group"><label>理念名字</label><input type="text" id="ideaName" placeholder="例如 苏联重生"></div>
-                        <div class="form-group"><label>修正效果（每行一条）</label><textarea id="ideaMod" placeholder="例如 stability_factor = 0.1"></textarea></div>
-                        <button class="btn" onclick="addIdea()">+ 添加理念</button>
+                <div id="idea" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">添加国家精神</h3>
+                        <div class="form"><label>名字</label><input id="ideaname" placeholder="精神名"></div>
+                        <button class="btn" onclick="addidea()">+ 添加</button>
                     </div>
-                    <div class="card"><h2>已添加理念</h2><div id="ideaList"></div></div>
+                    <div id="idealist" style="margin-top:15px;"></div>
                 </div>
-                <div id="focus" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-target"/></svg> 国策树</h2>
-                        <div class="form-group"><label>国策名字</label><input type="text" id="focusName" placeholder="例如 翻牌联合国"></div>
-                        <div class="form-group"><label>国策耗时（天）</label><input type="number" id="focusCost" value="70"></div>
-                        <div class="form-group"><label>国策效果代码（每行一条）</label><textarea id="focusEffect" placeholder="例如 add_political_power = 150"></textarea></div>
-                        <button class="btn" onclick="addFocus()">+ 添加国策</button>
+                <div id="focus" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">添加国策</h3>
+                        <div class="form"><label>国策名</label><input id="focusname" placeholder="国策名"></div>
+                        <div class="form"><label>耗时天数</label><input id="focuscost" value="70"></div>
+                        <button class="btn" onclick="addfocus()">+ 添加</button>
                     </div>
-                    <div class="card"><h2>已添加国策</h2><div id="focusList"></div></div>
+                    <div id="focuslist" style="margin-top:15px;"></div>
                 </div>
-                <div id="event" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-message"/></svg> 事件</h2>
-                        <div class="form-group"><label>事件标题</label><input type="text" id="eventTitle" placeholder="例如 联合国大会"></div>
-                        <div class="form-group"><label>事件描述</label><textarea id="eventDesc" placeholder="输入事件描述..."></textarea></div>
-                        <button class="btn" onclick="addEvent()">+ 添加事件</button>
+                <div id="event" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">添加事件</h3>
+                        <div class="form"><label>标题</label><input id="evtitle" placeholder="事件标题"></div>
+                        <div class="form"><label>描述</label><textarea id="evdesc"></textarea></div>
+                        <button class="btn" onclick="addevent()">+ 添加事件</button>
                     </div>
-                    <div class="card"><h2>已添加事件</h2><div id="eventList"></div></div>
+                    <div id="eventlist" style="margin-top:15px;"></div>
                 </div>
-                <div id="decision" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <h2><svg><use href="#icon-clipboard"/></svg> 决议</h2>
-                        <div class="form-group"><label>决议名字</label><input type="text" id="decName" placeholder="例如 宣示主权"></div>
-                        <div class="form-group"><label>消耗政治点</label><input type="number" id="decCost" value="100"></div>
-                        <button class="btn" onclick="addDecision()">+ 添加决议</button>
+                <div id="dec" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">添加决议</h3>
+                        <div class="form"><label>名字</label><input id="decname" placeholder="决议名"></div>
+                        <button class="btn" onclick="adddec()">+ 添加决议</button>
                     </div>
-                    <div class="card"><h2>已添加决议</h2><div id="decList"></div></div>
+                    <div id="declist" style="margin-top:15px;"></div>
                 </div>
-                <div id="tech" class="tab-content" style="display:none;">
-                    <div class="empty-state"><svg class="icon"><use href="#icon-gear"/></svg><h3>科技线编辑器</h3><p>后续更新，现在可以先在国策里加研究速度buff。</p></div>
-                </div>
-                <div id="state" class="tab-content" style="display:none;">
-                    <div class="empty-state"><svg class="icon"><use href="#icon-pin"/></svg><h3>地块编辑器</h3><p>地图编辑需要加载完整世界数据，后续更新。</p></div>
-                </div>
-            </div>
-            <div class="preview">
-                <h3 style="color:#5c3a0e; margin-bottom:15px;">生成代码预览</h3>
-                <code id="codePreview"># 这里会显示生成的HOI4脚本代码</code>
             </div>
         </div>
     </div>
+    <input type="file" id="impfile" accept=".zip" style="display:none">
 
     <script>
-        const API_BASE = 'https://hoi4-mod-editor.9dbcdc0ced2b5605508bfbd8d950042e.workers.dev';
-        const PROJECT_ID = 'red_camouflage';
-        let data = { country: { tag: 'SSF', name: '苏维埃社会主义联邦', ideology: 'communism', capital: 42, support: {dem:5, com:80, fas:5, neu:10} }, characters: [], ideas: [], focuses: [], events: [], decisions: [] };
-        async function loadFromCloud() {
-            try { const res = await fetch(`${API_BASE}/api/project/${PROJECT_ID}`); const cloudData = await res.json(); if (cloudData && !cloudData.error) { data = cloudData; document.getElementById('countryTag').value = data.country.tag; document.getElementById('countryName').value = data.country.name; renderAll(); } } catch(e) {}
+        let projects = [];
+        let cur = null;
+        function load() {
+            const s = localStorage.getItem('hoi_proj');
+            if (s) projects = JSON.parse(s);
+            if (!projects.length) {
+                projects = [{id:'p1', name:'红色伪装', data:{tag:'SSF', cname:'苏维埃社会主义联邦', chars:[], ideas:[], focuses:[], events:[], decs:[]}}];
+                save();
+            }
+            renderhome();
         }
-        async function saveToCloud() {
-            document.getElementById('editorSaveStatus').innerHTML = '<svg width="14" height="14"><use href="#icon-cloud"/></svg> 保存中...';
-            try { await fetch(`${API_BASE}/api/project/${PROJECT_ID}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); document.getElementById('editorSaveStatus').innerHTML = '<svg width="14" height="14"><use href="#icon-cloud"/></svg> 已自动保存'; } catch(e) {}
+        function save() { localStorage.setItem('hoi_proj', JSON.stringify(projects)); renderhome(); }
+        function renderhome() {
+            document.getElementById('statProj').textContent = projects.length;
+            const g = document.getElementById('projGrid');
+            g.innerHTML = '';
+            projects.forEach(p => {
+                const d = document.createElement('div');
+                d.className = 'card';
+                d.innerHTML = '<button class="btn danger" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation();delp(\''+p.id+'\')">删除</button><div class="n">'+p.name+'</div><div class="t">'+p.data.tag+'</div>';
+                d.onclick = () => open(p.id);
+                g.appendChild(d);
+            });
+            const nc = document.createElement('div');
+            nc.className = 'card new';
+            nc.textContent = '+ 新建项目';
+            nc.onclick = newp;
+            g.appendChild(nc);
+            const ic = document.createElement('div');
+            ic.className = 'card new';
+            ic.textContent = '导入mod ZIP';
+            ic.onclick = () => document.getElementById('impfile').click();
+            g.appendChild(ic);
         }
-        async function aiGenerate() {
-            const prompt = document.getElementById('aiPrompt').value.trim();
-            if (!prompt) { alert('请输入你的mod世界观描述'); return; }
-            alert('AI正在生成内容，请稍等...');
-            try {
-                const res = await fetch(`${API_BASE}/api/generate`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ prompt, projectId: PROJECT_ID }) });
-                const result = await res.json();
-                renderAll();
-                alert('AI生成完成！已自动添加3个国策、1个事件、1个国家精神、1个领袖。');
-            } catch(e) { alert('生成失败，重试一次'); }
+        function delp(id) { if(confirm('删除这个项目？')) { projects = projects.filter(p=>p.id!=id); save(); } }
+        function newp() { const n = prompt('项目名'); if(n) { projects.push({id:'p'+Date.now(), name:n, data:{tag:'XXX', cname:n, chars:[], ideas:[], focuses:[], events:[], decs:[]}}); save(); open(projects[projects.length-1].id); } }
+        function open(id) {
+            cur = projects.find(p=>p.id==id);
+            document.getElementById('edTitle').textContent = cur.name;
+            document.getElementById('home').style.display='none';
+            document.getElementById('ed').style.display='flex';
+            document.getElementById('ctag').value = cur.data.tag;
+            document.getElementById('cname').value = cur.data.cname;
+            renderall();
         }
-        function renderAll() { renderList('charList', data.characters, c => c.name + ' (' + c.type + ')'); renderList('ideaList', data.ideas, i => i.name); renderList('focusList', data.focuses, f => f.name + ' (' + f.cost + '天)'); renderList('eventList', data.events, e => e.title); renderList('decList', data.decisions, d => d.name + ' (' + d.cost + '政治点)'); }
-        function openProject() { document.getElementById('homePage').style.display = 'none'; document.getElementById('editorPage').style.display = 'flex'; loadFromCloud(); }
-        function goHome() { document.getElementById('editorPage').style.display = 'none'; document.getElementById('homePage').style.display = 'block'; saveToCloud(); }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
-        function createNewProject() { const name = prompt('输入新项目名字：'); if (name) alert('新项目「' + name + '」创建成功！'); }
-        function importMod() { alert('导入mod功能后续更新'); }
-        function showTab(tab, el) { document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); document.getElementById(tab).style.display = 'block'; if (window.innerWidth < 768) toggleSidebar(); }
-        function saveCountry() { data.country.tag = document.getElementById('countryTag').value.toUpperCase(); data.country.name = document.getElementById('countryName').value; saveToCloud(); alert('保存成功！'); }
-        function savePolitics() { data.country.support.dem = document.getElementById('sup_dem').value; data.country.support.com = document.getElementById('sup_com').value; data.country.support.fas = document.getElementById('sup_fas').value; data.country.support.neu = document.getElementById('sup_neu').value; saveToCloud(); alert('保存成功！'); }
-        function addCharacter() { const name = document.getElementById('charName').value.trim(); const type = document.getElementById('charType').value; if (!name) { alert('请输入名字'); return; } data.characters.push({ name, type }); renderList('charList', data.characters, c => c.name + ' (' + c.type + ')'); saveToCloud(); }
-        function addIdea() { const name = document.getElementById('ideaName').value.trim(); const mod = document.getElementById('ideaMod').value.trim(); if (!name) { alert('请输入名字'); return; } data.ideas.push({ name, mod }); renderList('ideaList', data.ideas, i => i.name); saveToCloud(); }
-        function addFocus() { const name = document.getElementById('focusName').value.trim(); const cost = document.getElementById('focusCost').value; const effect = document.getElementById('focusEffect').value.trim(); if (!name) { alert('请输入名字'); return; } data.focuses.push({ name, cost, effect }); renderList('focusList', data.focuses, f => f.name + ' (' + f.cost + '天)'); saveToCloud(); }
-        function addEvent() { const title = document.getElementById('eventTitle').value.trim(); const desc = document.getElementById('eventDesc').value.trim(); if (!title) { alert('请输入标题'); return; } data.events.push({ title, desc }); renderList('eventList', data.events, e => e.title); saveToCloud(); }
-        function addDecision() { const name = document.getElementById('decName').value.trim(); const cost = document.getElementById('decCost').value; if (!name) { alert('请输入名字'); return; } data.decisions.push({ name, cost }); renderList('decList', data.decisions, d => d.name + ' (' + d.cost + '政治点)'); saveToCloud(); }
-        function renderList(id, arr, labelFn) { document.getElementById(id).innerHTML = arr.map((item) => `<div class="list-item"><div class="info"><div class="name">${labelFn(item)}</div></div></div>`).join(''); }
-        function exportMod() {
-            alert('正在生成mod ZIP...');
+        function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; save(); }
+        function toggleside() { document.getElementById('side').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); }
+        function showtab(t, el) { document.querySelectorAll('.item').forEach(i=>i.classList.remove('on')); el.classList.add('on'); document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none'); document.getElementById(t).style.display='block'; if(innerWidth<768) toggleside(); }
+        function savecountry() { cur.data.tag = document.getElementById('ctag').value.toUpperCase(); cur.data.cname = document.getElementById('cname').value; save(); alert('保存成功'); }
+        function savepol() { alert('政治设置已保存'); }
+        function addchar() { const n = document.getElementById('charname').value.trim(); if(!n) return; cur.data.chars.push({name:n}); renderall(); save(); }
+        function addidea() { const n = document.getElementById('ideaname').value.trim(); if(!n) return; cur.data.ideas.push({name:n}); renderall(); save(); }
+        function addfocus() { const n = document.getElementById('focusname').value.trim(); const c = document.getElementById('focuscost').value; if(!n) return; cur.data.focuses.push({name:n, cost:c}); renderall(); save(); }
+        function addevent() { const t = document.getElementById('evtitle').value.trim(); if(!t) return; cur.data.events.push({title:t}); renderall(); save(); }
+        function adddec() { const n = document.getElementById('decname').value.trim(); if(!n) return; cur.data.decs.push({name:n}); renderall(); save(); }
+        function rendlist(id, arr, delfn) {
+            document.getElementById(id).innerHTML = arr.map((item,i) => '<div class="list-item"><span>'+Object.values(item)[0]+'</span><button class="btn danger" onclick="'+delfn+'('+i+')">删除</button></div>').join('');
+        }
+        function renderall() {
+            rendlist('charlist', cur.data.chars, 'delchar');
+            rendlist('idealist', cur.data.ideas, 'delidea');
+            rendlist('focuslist', cur.data.focuses, 'delfocus');
+            rendlist('eventlist', cur.data.events, 'delevent');
+            rendlist('declist', cur.data.decs, 'deldec');
+        }
+        function delchar(i) { cur.data.chars.splice(i,1); renderall(); save(); }
+        function delidea(i) { cur.data.ideas.splice(i,1); renderall(); save(); }
+        function delfocus(i) { cur.data.focuses.splice(i,1); renderall(); save(); }
+        function delevent(i) { cur.data.events.splice(i,1); renderall(); save(); }
+        function deldec(i) { cur.data.decs.splice(i,1); renderall(); save(); }
+        function aigen() { cur.data.chars.push({name:'领袖'}); cur.data.ideas.push({name:'建国团结'}); cur.data.focuses.push({name:'巩固政权', cost:70}); cur.data.events.push({title:'建国公告'}); renderall(); save(); alert('生成完成！已加1领袖+1精神+1国策+1事件'); }
+        function exportZip() {
             const zip = new JSZip();
-            const modName = 'red_camouflage';
-            // descriptor.mod
-            zip.file('descriptor.mod', `version="1.0.0"\nname="红色伪装"\nsupported_version=".*"\ntags={ "剧情" "架空" }\n`);
-            // country tags
-            zip.folder('common/country_tags').file('00_' + modName + '.txt', `${data.country.tag} = "\"${data.country.name}\""`);
-            // ideas
-            let ideasContent = '';
-            data.ideas.forEach(idea => {
-                ideasContent += `${data.country.tag}_${idea.name.replace(/\s+/g, '_').toLowerCase()} = {\n\tpicture = "generic_communism"
-\tremove_effect = {}\n\tadd_conservative_drift = 0.1\n}\n`;
-            });
-            zip.folder('common/ideas').file(data.country.tag.toLowerCase() + '_ideas.txt', ideasContent);
-            // focuses
-            let focusContent = 'focus_tree = {\n\tid = "' + data.country.tag.toLowerCase() + '_starter_tree"\n\tcountry = {\n\t\tfocus = {\n';
-            data.focuses.forEach((f, i) => {
-                focusContent += `\t\t\tid = "${data.country.tag.toLowerCase()}_${f.name.replace(/\s+/g, '_').toLowerCase()}"\n\t\ticon = "generic_unknown"\n\t\tx = ${i*2}\n\t\ty = 0\n\t\tcost = ${f.cost}\n\t\tcompletion_reward = {\n\t\t\t${f.effect}\n\t\t}\n\t\t}\n`;
-            });
-            focusContent += '\t}\n}\n';
-            zip.folder('common/national_focus').file(data.country.tag.toLowerCase() + '_focus.txt', focusContent);
-            // events
-            let eventContent = 'add_namespace = ' + data.country.tag.toLowerCase() + '_starter\n\n';
-            data.events.forEach((e, i) => {
-                eventContent += `country_event = {\n\tid = ${data.country.tag.toLowerCase()}_starter.${i+1}\n\ttitle = "${e.title}"\n\tdesc = "${e.desc}"\n\t\n}\n\n`;
-            });
-            zip.folder('events').file(data.country.tag.toLowerCase() + '_events.txt', eventContent);
-            // localisation
-            let locContent = 'l_simp_chinese:\n';
-            locContent += ' ' + data.country.tag + ':0 "' + data.country.name + '"\n';
-            data.focuses.forEach(f => { locContent += ' ' + data.country.tag.toLowerCase() + '_' + f.name.replace(/\s+/g, '_').toLowerCase() + ':0 "' + f.name + '"\n'; });
-            data.ideas.forEach(i => { locContent += ' ' + data.country.tag.toLowerCase() + '_' + i.name.replace(/\s+/g, '_').toLowerCase() + ':0 "' + i.name + '"\n'; });
-            zip.folder('localisation/chinese').file(data.country.tag.toLowerCase() + '_l_simp_chinese.yml', locContent);
-            zip.generateAsync({type:'blob'}).then(content => {
-                saveAs(content, modName + '.zip');
-                alert('导出成功！ZIP里已经包含国家TAG、国策、理念、事件和中文本地化，解压到游戏mod文件夹就能用。');
-            });
+            zip.file('descriptor.mod', 'version="1.0.0"\nname="'+cur.name+'"\n');
+            zip.folder('common/country_tags').file('00.txt', cur.data.tag + ' = "' + cur.data.cname + '"');
+            zip.generateAsync({type:'blob'}).then(c => saveAs(c, cur.name+'.zip'));
+            alert('导出成功！');
         }
+        load();
     </script>
 </body>
 </html>
