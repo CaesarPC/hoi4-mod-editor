@@ -24,7 +24,7 @@
         .card { background: #fff; padding: 20px; border-radius: 12px; cursor: pointer; position: relative; }
         .card .n { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
         .card .t { color: #5c3a0e; font-size: 13px; margin-bottom: 12px; }
-        .new { border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; color: #999; }
+        .new { border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; color: #999; cursor: pointer; }
         .editor { display: none; height: 100vh; flex-direction: column; }
         .main { display: flex; flex: 1; overflow: hidden; }
         .side { width: 250px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
@@ -60,7 +60,7 @@
                 <div class="stat"><div class="l">项目数</div><div class="v" id="statProj">1</div></div>
                 <div class="stat"><div class="l">国家数</div><div class="v" id="statCountry">1</div></div>
                 <div class="stat"><div class="l">实体数</div><div class="v" id="statEnt">0</div></div>
-                <div class="stat"><div class="l">存储</div><div class="v" style="font-size:16px;">本地浏览器存储</div></div>
+                <div class="stat"><div class="l">存储</div><div class="v" style="font-size:16px;">浏览器本地存储</div></div>
             </div>
             <div class="grid" id="projGrid"></div>
         </div>
@@ -176,10 +176,11 @@
             document.getElementById('statProj').textContent = projects.length;
             const g = document.getElementById('projGrid');
             g.innerHTML = '';
-            projects.forEach(p => {
+            projects.forEach((p, idx) => {
                 const d = document.createElement('div');
                 d.className = 'card';
-                d.innerHTML = '<button class="btn danger" style="position:absolute;top:10px;right:10px;" onclick="event.stopPropagation();delp(\''+p.id+'\')">删除</button><div class="n">'+p.name+'</div><div class="t">'+p.data.tag+'</div>';
+                d.innerHTML = '<button class="btn danger" style="position:absolute;top:10px;right:10px;">删除</button><div class="n">'+p.name+'</div><div class="t">'+p.data.tag+'</div>';
+                d.querySelector('.danger').onclick = (e) => { e.stopPropagation(); delp(idx); };
                 d.onclick = () => open(p.id);
                 g.appendChild(d);
             });
@@ -194,7 +195,7 @@
             ic.onclick = () => document.getElementById('impfile').click();
             g.appendChild(ic);
         }
-        function delp(id) { if(confirm('删除这个项目？')) { projects = projects.filter(p=>p.id!=id); save(); } }
+        function delp(idx) { if(confirm('删除这个项目？')) { projects.splice(idx,1); save(); } }
         function newp() { const n = prompt('项目名'); if(n) { projects.push({id:'p'+Date.now(), name:n, data:{tag:'XXX', cname:n, chars:[], ideas:[], focuses:[], events:[], decs:[]}}); save(); open(projects[projects.length-1].id); } }
         function open(id) {
             cur = projects.find(p=>p.id==id);
@@ -216,7 +217,19 @@
         function addevent() { const t = document.getElementById('evtitle').value.trim(); if(!t) return; cur.data.events.push({title:t}); renderall(); save(); }
         function adddec() { const n = document.getElementById('decname').value.trim(); if(!n) return; cur.data.decs.push({name:n}); renderall(); save(); }
         function rendlist(id, arr, delfn) {
-            document.getElementById(id).innerHTML = arr.map((item,i) => '<div class="list-item"><span>'+Object.values(item)[0]+'</span><button class="btn danger" onclick="'+delfn+'('+i+')">删除</button></div>').join('');
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            arr.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = '<span>'+Object.values(item)[0]+'</span>';
+                const btn = document.createElement('button');
+                btn.className = 'btn danger';
+                btn.textContent = '删除';
+                btn.onclick = () => window[delfn](i);
+                div.appendChild(btn);
+                el.appendChild(div);
+            });
         }
         function renderall() {
             rendlist('charlist', cur.data.chars, 'delchar');
