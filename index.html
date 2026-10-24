@@ -3,108 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOI4 Mod 编辑器</title>
+    <title>HOI4 Mod 编辑器 - 免费可视化mod制作工具</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.2s ease; }
-        body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
-        .auth-page { display:flex; align-items:center; justify-content:center; height:100vh; }
-        .auth-card { background:#fff; padding:40px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
+        body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; }
+        .topbar { background: #fff; padding: 14px 24px; display: flex; align-items: center; border-bottom: 1px solid #eee; height:64px; position:sticky; top:0; z-index:50; }
+        .logo { display:flex; align-items:center; gap:12px; }
+        .logo-icon { width:40px; height:40px; background:#5c3a0e; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; }
+        .logo-text .t1 { font-size:18px; font-weight:bold; color:#333; }
+        .logo-text .t2 { font-size:12px; color:#999; }
+        .topbar .spacer { flex:1; }
+        .btn { background:#5c3a0e; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:15px; }
+        .btn:hover { background:#7a4d12; }
+        .btn.sm { padding:8px 16px; font-size:14px; }
+        .btn.sec { background:#fff; color:#333; border:1px solid #e0d8c8; }
+        .landing { max-width:1100px; margin:0 auto; padding:60px 24px; }
+        .hero h1 { font-size:56px; line-height:1.2; margin-bottom:24px; font-weight:800; }
+        .hero p { font-size:18px; color:#666; line-height:1.8; max-width:700px; margin-bottom:32px; }
+        .hero-btns { display:flex; gap:16px; margin-bottom:12px; }
+        .section { margin:80px 0; }
+        .section h2 { font-size:36px; margin-bottom:32px; }
+        .feature-row { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin-bottom:60px; }
+        .feature-row .num { color:#999; font-size:18px; margin-bottom:8px; }
+        .feature-row h3 { font-size:24px; margin-bottom:16px; }
+        .feature-row p { font-size:16px; color:#666; line-height:1.8; }
+        .mockup { background:#e8e2d5; border-radius:12px; height:320px; display:flex; align-items:center; justify-content:center; color:#999; }
+        .search-box { background:#fff; border-radius:12px; padding:4px; display:flex; }
+        .search-box input { flex:1; border:none; padding:16px; font-size:16px; outline:none; }
+        .auth-card { background:#fff; padding:40px; border-radius:16px; width:90%; max-width:400px; margin:80px auto; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
         .auth-card h2 { text-align:center; margin-bottom:25px; color:#5c3a0e; font-size:22px; }
         .form { margin-bottom:15px; }
         label { display:block; margin-bottom:5px; color:#666; font-size:13px; }
         input, select, textarea { width:100%; padding:10px 12px; border:1px solid #e0d8c8; border-radius:8px; font-size:15px; background:#faf8f3; outline:none; }
-        input:focus, select:focus { border-color:#5c3a0e; }
-        .btn { background:#5c3a0e; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
-        .btn:hover { background:#7a4d12; }
-        .btn.sm { padding:4px 10px; font-size:12px; }
-        .btn.sec { background:#fff; color:#333; border:1px solid #e0d8c8; }
-        .btn.danger { background:#e74c3c; }
-        .topbar { background:#fff; padding:10px 20px; display:flex; align-items:center; border-bottom:1px solid #e0d8c8; height:56px; }
-        .topbar .logo { font-size:18px; font-weight:bold; color:#5c3a0e; }
-        .topbar .spacer { flex:1; }
-        .page { padding:25px; height:calc(100vh - 56px); overflow-y:auto; }
-        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:25px; }
-        .stat { background:#fff; padding:18px; border-radius:10px; }
-        .stat .l { color:#999; font-size:12px; margin-bottom:8px; }
-        .stat .v { font-size:24px; font-weight:bold; }
-        .proj-item { background:#fff; padding:18px; border-radius:10px; border-left:4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; cursor:pointer; }
-        .proj-item:hover { transform:translateX(4px); }
-        .proj-item .n { font-size:17px; font-weight:bold; margin-bottom:4px; }
-        .proj-item .meta { color:#999; font-size:12px; }
-        .editor { display:none; height:100vh; flex-direction:column; }
+        .app { display:none; height:100vh; flex-direction:column; overflow:hidden; }
         .main { display:flex; flex:1; overflow:hidden; }
         .side { width:220px; background:#faf8f3; border-right:1px solid #e0d8c8; padding:12px 0; overflow-y:auto; flex-shrink:0; }
         .side .sec { padding:6px 18px; font-size:10px; color:#999; margin-top:8px; }
         .side .item { padding:8px 18px; cursor:pointer; color:#666; font-size:13px; border-radius:0 6px 6px 0; margin-right:8px; }
         .side .item:hover { background:#f0ebe0; }
         .side .item.on { background:#f0ebe0; color:#5c3a0e; font-weight:bold; }
-        .side .country-bar { margin:10px 8px; padding:8px; background:#fff; border-radius:8px; border:1px solid #e0d8c8; }
         .content { flex:1; padding:20px; overflow-y:auto; min-width:0; }
-        .card { background:#fff; padding:20px; border-radius:10px; }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:25px; }
+        .stat { background:#fff; padding:18px; border-radius:10px; }
+        .stat .l { color:#999; font-size:12px; margin-bottom:8px; }
+        .stat .v { font-size:24px; font-weight:bold; }
+        .proj-item { background:#fff; padding:18px; border-radius:10px; border-left:4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; cursor:pointer; }
         .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:99; display:none; }
         .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:22px; border-radius:12px; z-index:100; width:90%; max-width:420px; }
-        .modal h3 { margin-bottom:15px; font-size:17px; }
         .type-pick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0; }
         .type-pick div { padding:8px 4px; border:1px solid #e0d8c8; border-radius:6px; text-align:center; font-size:12px; cursor:pointer; }
         .type-pick div.on { border-color:#5c3a0e; background:#f0ebe0; color:#5c3a0e; }
-        .del-btn { width:18px; height:18px; border-radius:50%; background:#e74c3c; color:white; border:none; font-size:12px; cursor:pointer; margin-left:6px; }
-        @media (max-width:768px) { .stats { grid-template-columns:repeat(2,1fr); } .side { display:none; } }
+        @media (max-width:768px) { .hero h1 { font-size:36px; } .feature-row { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(2,1fr); } .side { display:none; } }
     </style>
 </head>
 <body>
-    <div id="authPage" class="auth-page">
-        <div class="auth-card">
-            <h2>HOI4 Mod 编辑器</h2>
-            <div id="loginForm">
-                <div class="form"><label>用户名</label><input id="loginUser"></div>
-                <div class="form"><label>密码</label><input type="password" id="loginPass"></div>
-                <button class="btn" style="width:100%;" onclick="login()">登录</button>
-                <div style="text-align:center;margin-top:12px;color:#666;font-size:13px;">还没账号？<span style="color:#5c3a0e;cursor:pointer;" onclick="showReg()">注册</span></div>
+    <!-- 未登录首页 -->
+    <div id="landingPage">
+        <div class="topbar">
+            <div class="logo">
+                <div class="logo-icon">H</div>
+                <div class="logo-text"><div class="t1">HOI4 Mod 编辑器</div><div class="t2">Hagane Works 免费替代版</div></div>
             </div>
-            <div id="regForm" style="display:none;">
-                <div class="form"><label>用户名</label><input id="regUser"></div>
-                <div class="form"><label>密码</label><input type="password" id="regPass"></div>
-                <button class="btn" style="width:100%;" onclick="register()">注册并登录</button>
-                <div style="text-align:center;margin-top:12px;color:#666;font-size:13px;">已有账号？<span style="color:#5c3a0e;cursor:pointer;" onclick="showLogin()">登录</span></div>
+            <div class="spacer"></div>
+            <button class="btn sm" onclick="showLogin()">登录</button>
+        </div>
+        <div class="landing">
+            <div class="hero">
+                <h1>HOI4可视化mod编辑器</h1>
+                <p>新建或导入已有Mod，可视化编辑国策树、事件和决议，所见即所得；AI帮你写代码，完全免费无付费墙。</p>
+                <div class="hero-btns">
+                    <button class="btn" onclick="showLogin()">开始制作 →</button>
+                    <button class="btn sec">浏览知识</button>
+                </div>
+                <p style="font-size:14px;color:#999;margin-top:12px;">知识全部公开阅读，无需登录。</p>
+            </div>
+
+            <div class="section">
+                <h2>可视化工作台</h2>
+                <div class="feature-row">
+                    <div class="mockup">国策树画布预览</div>
+                    <div><div class="num">01</div><h3>在画布上排国策路线</h3><p>拖动节点定位位置，前置和互斥在编辑面板里选；事件选项和角色在表单里填。</p></div>
+                </div>
+                <div class="feature-row">
+                    <div><div class="num">02</div><h3>自动生成游戏脚本</h3><p>每条内容保存后自动生成HOI4可直接用的Paradox脚本代码，你能手动改，AI也能帮你改。</p></div>
+                    <div class="mockup">生成代码预览</div>
+                </div>
+                <div class="feature-row">
+                    <div class="mockup">事件预览弹窗</div>
+                    <div><div class="num">03</div><h3>导出直接能玩</h3><p>下载mod后，直接放进HOI4 mod文件夹就能用，不用解压不用改路径。</p></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>HOI4 Mod 知识社区</h2>
+                <div class="search-box">
+                    <input placeholder="例如：每天多1点政治点">
+                    <button class="btn">搜索</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="home" style="display:none;">
+    <!-- 登录页 -->
+    <div id="authPage" style="display:none;">
         <div class="topbar">
-            <div class="logo">HOI4 Mod 编辑器</div>
+            <div class="logo"><div class="logo-icon">H</div><div class="logo-text"><div class="t1">HOI4 Mod 编辑器</div></div></div>
+            <div class="spacer"></div>
+            <button class="btn sec sm" onclick="backHome()">返回首页</button>
+        </div>
+        <div class="auth-card">
+            <h2>登录开始制作</h2>
+            <div class="form"><label>用户名</label><input id="loginUser"></div>
+            <div class="form"><label>密码</label><input type="password" id="loginPass"></div>
+            <button class="btn" style="width:100%;" onclick="login()">登录</button>
+            <div style="text-align:center;margin-top:12px;color:#666;font-size:13px;">没有账号直接输用户名密码注册就行</div>
+        </div>
+    </div>
+
+    <!-- 编辑器主界面 -->
+    <div id="app" class="app">
+        <div class="topbar">
+            <div class="logo"><div class="logo-icon">H</div><div class="logo-text"><div class="t1" id="edTitle">未命名项目</div></div></div>
             <div class="spacer"></div>
             <span id="userName" style="margin-right:12px;color:#666;font-size:14px;"></span>
             <button class="btn sec sm" onclick="logout()">退出</button>
             <button class="btn sm sec">导入mod</button>
             <button class="btn sm" onclick="openProjModal()">新建项目</button>
         </div>
-        <div class="page">
-            <h2 style="margin-bottom:20px;">我的项目</h2>
-            <div class="stats">
-                <div class="stat"><div class="l">项目</div><div class="v" id="statProj">0</div></div>
-                <div class="stat"><div class="l">国家</div><div class="v">0</div></div>
-                <div class="stat"><div class="l">国策</div><div class="v">0</div></div>
-                <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:15px;">无</div></div>
-            </div>
-            <div id="projList"><div style="text-align:center;color:#999;padding:40px;">还没有项目，点右上角新建开始创作</div></div>
-        </div>
-    </div>
-
-    <div id="ed" class="editor" style="display:none;">
-        <div class="topbar">
-            <div class="logo" id="edTitle">未命名项目</div>
-            <div class="spacer"></div>
-            <button class="btn sec sm" onclick="gohome()">返回首页</button>
-        </div>
         <div class="main">
             <div class="side">
-                <div class="country-bar">
-                    <select id="countrySel" style="font-size:13px;padding:6px;" onchange="switchCountry()">
-                        <option value="">+ 添加国家</option>
-                    </select>
-                </div>
+                <div style="padding:0 10px;"><select id="countrySel" style="width:100%;font-size:13px;padding:6px;" onchange="switchCountry()"><option value="">+ 添加国家</option></select></div>
                 <div id="sideItems" style="display:none;">
                     <div class="sec">创作</div>
                     <div class="item on" data-tab="ai">AI助手</div>
@@ -118,23 +147,30 @@
                     <div class="sec">系统</div>
                     <div class="item" data-tab="loc">本地化</div>
                     <div class="item" data-tab="export">导出mod</div>
-                    <div class="item" data-tab="settings">设置</div>
                 </div>
             </div>
             <div class="content">
-                <div id="emptyState" style="text-align:center;color:#999;padding:80px 0;">先从左上角下拉框添加你的第一个国家，开始编辑</div>
-                <div id="mainTabs" style="display:none;">
-                    <div id="ai" class="tab"><div class="card"><h3 style="margin-bottom:15px;">AI助手</h3><div style="height:250px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:12px;"><div style="color:#666;">你好，我是mod制作助手</div></div><div style="display:flex;gap:8px;"><input placeholder="输入消息..." style="flex:1;"><button class="btn sm">发送</button></div></div></div>
-                    <div id="country" class="tab" style="display:none;"><div class="card"><h3 style="margin-bottom:15px;">国家基础设置</h3><div class="form"><label>国家TAG</label><input id="editCtag"></div><div class="form"><label>国家全名</label><input id="editCname"></div></div></div>
-                    <div id="char" class="tab" style="display:none;"><div class="card"><h3 style="margin-bottom:15px;">角色管理</h3></div></div>
-                    <div id="pol" class="tab" style="display:none;"><div class="card"><h3 style="margin-bottom:15px;">政治支持率</h3><div style="display:flex;gap:20px;align-items:center;"><div style="width:180px;"><canvas id="polchart"></canvas></div><div style="flex:1;"><div class="form"><label>共产主义 %</label><input type="number" value="80"></div><div class="form"><label>民主主义 %</label><input type="number" value="5"></div><div class="form"><label>法西斯主义 %</label><input type="number" value="5"></div><div class="form"><label>中立主义 %</label><input type="number" value="10"></div></div></div></div></div>
-                    <div id="spirit" class="tab" style="display:none;"><div class="card"><h3>国家精神</h3></div></div>
-                    <div id="focus" class="tab" style="display:none;"><div class="card"><h3>国策树</h3></div></div>
-                    <div id="event" class="tab" style="display:none;"><div class="card"><h3>事件编辑器</h3></div></div>
-                    <div id="decision" class="tab" style="display:none;"><div class="card"><h3>决议管理</h3></div></div>
-                    <div id="loc" class="tab" style="display:none;"><div class="card"><h3>本地化</h3></div></div>
-                    <div id="export" class="tab" style="display:none;"><div class="card"><h3>导出mod</h3><p style="color:#999;">导出后直接放进HOI4 mod文件夹即可游玩</p></div></div>
-                    <div id="settings" class="tab" style="display:none;"><div class="card"><h3>设置</h3></div></div>
+                <div id="homeTab">
+                    <h2 style="margin-bottom:20px;">我的项目</h2>
+                    <div class="stats">
+                        <div class="stat"><div class="l">项目</div><div class="v" id="statProj">0</div></div>
+                        <div class="stat"><div class="l">国家</div><div class="v">0</div></div>
+                        <div class="stat"><div class="l">国策</div><div class="v">0</div></div>
+                        <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:15px;">无</div></div>
+                    </div>
+                    <div id="projList"><div style="text-align:center;color:#999;padding:40px;">还没有项目，点右上角新建开始创作</div></div>
+                </div>
+                <div id="editorTabs" style="display:none;">
+                    <div id="ai" class="tab"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">AI助手</h3><div style="height:250px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:12px;"><div style="color:#666;">你好，我是mod制作助手</div></div><div style="display:flex;gap:8px;"><input placeholder="输入消息..." style="flex:1;"><button class="btn sm">发送</button></div></div></div>
+                    <div id="country" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">国家基础设置</h3><div class="form"><label>国家TAG</label><input id="editCtag"></div><div class="form"><label>国家全名</label><input id="editCname"></div></div></div>
+                    <div id="char" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>角色管理</h3></div></div>
+                    <div id="pol" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">政治支持率</h3><div style="display:flex;gap:20px;align-items:center;"><div style="width:180px;"><canvas id="polchart"></canvas></div><div style="flex:1;"><div class="form"><label>共产主义 %</label><input type="number" value="80"></div><div class="form"><label>民主主义 %</label><input type="number" value="5"></div><div class="form"><label>法西斯主义 %</label><input type="number" value="5"></div><div class="form"><label>中立主义 %</label><input type="number" value="10"></div></div></div></div></div>
+                    <div id="spirit" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>国家精神</h3></div></div>
+                    <div id="focus" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>国策树</h3></div></div>
+                    <div id="event" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>事件编辑器</h3></div></div>
+                    <div id="decision" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>决议管理</h3></div></div>
+                    <div id="loc" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>本地化</h3></div></div>
+                    <div id="export" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>导出mod</h3><p style="color:#999;">导出后直接放进HOI4 mod文件夹即可游玩</p></div></div>
                 </div>
             </div>
         </div>
@@ -144,7 +180,7 @@
     <div class="modal" id="projModal">
         <h3>新建空项目</h3>
         <div class="form"><label>模组名称</label><input id="npName"></div>
-        <div class="form"><label>模组标签（可多选，给AI当设定参考）</label></div>
+        <div class="form"><label>模组标签（可多选）</label></div>
         <div class="type-pick">
             <div data-type="ww2" class="on">二战背景</div>
             <div data-type="coldwar">冷战背景</div>
@@ -160,7 +196,6 @@
             <button class="btn sm" onclick="createProj()">创建</button>
         </div>
     </div>
-
     <div class="modal" id="countryModal">
         <h3>添加新国家</h3>
         <div class="form"><label>国家TAG（3字母）</label><input id="ncTag" maxlength="3"></div>
@@ -175,19 +210,16 @@
         let projects = [];
         try { projects = JSON.parse(localStorage.getItem('hoi_projects_v2') || '[]'); } catch(e) { projects = []; }
         let curProj = null;
-        let curCountry = null;
-        let projType = 'ww2';
-        function showReg() { document.getElementById('loginForm').style.display='none'; document.getElementById('regForm').style.display='block'; }
-        function showLogin() { document.getElementById('regForm').style.display='none'; document.getElementById('loginForm').style.display='block'; }
+        function showLogin() { document.getElementById('landingPage').style.display='none'; document.getElementById('authPage').style.display='block'; window.scrollTo(0,0); }
+        function backHome() { document.getElementById('authPage').style.display='none'; document.getElementById('landingPage').style.display='block'; }
         function login() {
             const u = document.getElementById('loginUser').value;
             localStorage.setItem('hoi_user', u);
             document.getElementById('authPage').style.display='none';
-            document.getElementById('home').style.display='block';
+            document.getElementById('app').style.display='flex';
             document.getElementById('userName').textContent = u;
             renderHome();
         }
-        function register() { login(); }
         function logout() { localStorage.removeItem('hoi_user'); location.reload(); }
         function renderHome() {
             document.getElementById('statProj').textContent = projects.length;
@@ -197,36 +229,28 @@
             projects.forEach((p, idx) => {
                 const d = document.createElement('div');
                 d.className = 'proj-item';
-                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+p.type+' · '+p.countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
+                d.innerHTML = '<div><div style="font-size:17px;font-weight:bold;margin-bottom:4px;">'+p.name+'</div><div style="color:#999;font-size:12px;">'+p.tags.join('、')+' · '+p.countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
                 d.onclick = () => openProject(idx);
                 list.appendChild(d);
             });
         }
-        function openProjModal() {
-            projType = 'ww2';
-            document.querySelectorAll('.type-pick div').forEach(d=>d.classList.remove('on'));
-            document.querySelector('.type-pick div[data-type="ww2"]').classList.add('on');
-            document.getElementById('modalMask').style.display='block';
-            document.getElementById('projModal').style.display='block';
-        }
+        function openProjModal() { document.getElementById('modalMask').style.display='block'; document.getElementById('projModal').style.display='block'; }
         function closeModal() { document.getElementById('modalMask').style.display='none'; document.getElementById('projModal').style.display='none'; }
-        document.querySelectorAll('.type-pick div').forEach(d => {
-            d.onclick = () => {
-                d.classList.toggle('on');
-            };
-        });
+        document.querySelectorAll('.type-pick div').forEach(d => { d.onclick = () => d.classList.toggle('on'); });
         function createProj() {
             const n = document.getElementById('npName').value.trim();
             if (!n) { alert('请填项目名'); return; }
-            projects.push({name:n, type:projType, countries:[]});
+            const tags = [];
+            document.querySelectorAll('.type-pick div.on').forEach(d=>tags.push(d.dataset.type));
+            projects.push({name:n, tags:tags, countries:[]});
             localStorage.setItem('hoi_projects_v2', JSON.stringify(projects));
             closeModal(); renderHome();
         }
         function openProject(idx) {
             curProj = projects[idx];
             document.getElementById('edTitle').textContent = curProj.name;
-            document.getElementById('home').style.display='none';
-            document.getElementById('ed').style.display='flex';
+            document.getElementById('homeTab').style.display='none';
+            document.getElementById('editorTabs').style.display='block';
             renderCountrySel();
         }
         function renderCountrySel() {
@@ -234,30 +258,15 @@
             sel.innerHTML = '<option value="">+ 添加国家</option>';
             curProj.countries.forEach((c, i) => {
                 const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = c.tag + ' - ' + c.name;
+                opt.value = i; opt.textContent = c.tag + ' - ' + c.name;
                 sel.appendChild(opt);
             });
-            if (curProj.countries.length > 0) {
-                document.getElementById('emptyState').style.display='none';
-                document.getElementById('mainTabs').style.display='block';
-                document.getElementById('sideItems').style.display='block';
-            } else {
-                document.getElementById('emptyState').style.display='block';
-                document.getElementById('mainTabs').style.display='none';
-                document.getElementById('sideItems').style.display='none';
-            }
+            document.getElementById('sideItems').style.display = curProj.countries.length > 0 ? 'block' : 'none';
         }
         function switchCountry() {
             const v = document.getElementById('countrySel').value;
-            if (v === '') {
-                document.getElementById('modalMask').style.display='block';
-                document.getElementById('countryModal').style.display='block';
-                return;
-            }
+            if (v === '') { document.getElementById('modalMask').style.display='block'; document.getElementById('countryModal').style.display='block'; return; }
             curCountry = curProj.countries[v];
-            document.getElementById('editCtag').value = curCountry.tag;
-            document.getElementById('editCname').value = curCountry.name;
         }
         function closeCountryModal() { document.getElementById('modalMask').style.display='none'; document.getElementById('countryModal').style.display='none'; document.getElementById('countrySel').value=''; }
         function addCountry() {
@@ -266,28 +275,21 @@
             if (!t || !n) { alert('填全内容'); return; }
             curProj.countries.push({tag:t, name:n});
             localStorage.setItem('hoi_projects_v2', JSON.stringify(projects));
-            closeCountryModal();
-            renderCountrySel();
+            closeCountryModal(); renderCountrySel();
         }
-        function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; renderHome(); }
         document.querySelectorAll('.item').forEach(item => {
             item.onclick = () => {
                 document.querySelectorAll('.item').forEach(i=>i.classList.remove('on'));
                 item.classList.add('on');
                 document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none');
                 document.getElementById(item.dataset.tab).style.display='block';
-                if (item.dataset.tab == 'pol') {
-                    new Chart(document.getElementById('polchart'), {
-                        type:'doughnut',
-                        data:{labels:['共','民','法','中'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}
-                    });
-                }
+                if (item.dataset.tab == 'pol') new Chart(document.getElementById('polchart'), {type:'doughnut',data:{labels:['共','民','法','中'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}});
             };
         });
         let savedUser = localStorage.getItem('hoi_user');
         if (savedUser) {
-            document.getElementById('authPage').style.display='none';
-            document.getElementById('home').style.display='block';
+            document.getElementById('landingPage').style.display='none';
+            document.getElementById('app').style.display='flex';
             document.getElementById('userName').textContent = savedUser;
             renderHome();
         }
