@@ -45,8 +45,8 @@
         .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:99; display:none; }
         .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:22px; border-radius:12px; z-index:100; width:90%; max-width:420px; }
         .modal h3 { margin-bottom:15px; font-size:17px; }
-        .type-pick { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
-        .type-pick div { padding:10px; border:1px solid #e0d8c8; border-radius:8px; text-align:center; font-size:13px; cursor:pointer; }
+        .type-pick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0; }
+        .type-pick div { padding:8px 4px; border:1px solid #e0d8c8; border-radius:6px; text-align:center; font-size:12px; cursor:pointer; }
         .type-pick div.on { border-color:#5c3a0e; background:#f0ebe0; color:#5c3a0e; }
         .del-btn { width:18px; height:18px; border-radius:50%; background:#e74c3c; color:white; border:none; font-size:12px; cursor:pointer; margin-left:6px; }
         @media (max-width:768px) { .stats { grid-template-columns:repeat(2,1fr); } .side { display:none; } }
@@ -144,11 +144,16 @@
     <div class="modal" id="projModal">
         <h3>新建空项目</h3>
         <div class="form"><label>模组名称</label><input id="npName"></div>
-        <div class="form"><label>模组类型（给AI当系统提示用）</label></div>
+        <div class="form"><label>模组标签（可多选，给AI当设定参考）</label></div>
         <div class="type-pick">
-            <div data-type="ww2" class="on">二战架空</div>
-            <div data-type="coldwar">冷战架空</div>
-            <div data-type="modern">现代架空</div>
+            <div data-type="ww2" class="on">二战背景</div>
+            <div data-type="coldwar">冷战背景</div>
+            <div data-type="modern">现代背景</div>
+            <div data-type="alt">架空历史</div>
+            <div data-type="large">大型mod</div>
+            <div data-type="small">小型mod</div>
+            <div data-type="balance">平衡改动</div>
+            <div data-type="overhaul">全面 overhaul</div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:15px;">
             <button class="btn sec sm" onclick="closeModal()">取消</button>
@@ -207,9 +212,7 @@
         function closeModal() { document.getElementById('modalMask').style.display='none'; document.getElementById('projModal').style.display='none'; }
         document.querySelectorAll('.type-pick div').forEach(d => {
             d.onclick = () => {
-                document.querySelectorAll('.type-pick div').forEach(x=>x.classList.remove('on'));
-                d.classList.add('on');
-                projType = d.dataset.type;
+                d.classList.toggle('on');
             };
         });
         function createProj() {
