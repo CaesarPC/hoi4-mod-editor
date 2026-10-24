@@ -158,10 +158,12 @@
         </div>
         <div class="main">
             <div class="side">
-                <div style="padding:0 10px;margin-bottom:10px;">
-                    <select id="countrySelect" style="width:100%;font-size:13px;padding:6px;" onchange="onCountryChange()">
-                        <option value="">+ 添加国家</option>
-                    </select>
+                <div style="padding:0 10px;margin-bottom:10px;position:relative;">
+                    <button id="countryDropdownBtn" style="width:100%;padding:10px;background:#fff;border:1px solid #e0d8c8;border-radius:8px;text-align:left;cursor:pointer;font-size:13px;">+ 新建国家</button>
+                    <div id="countryDropdown" style="display:none;position:absolute;top:100%;left:10px;right:10px;background:#fff;border:1px solid #e0d8c8;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:30;overflow:hidden;">
+                        <div id="countryDropdownList"></div>
+                        <div style="border-top:1px solid #eee;padding:10px;cursor:pointer;color:#5c3a0e;font-weight:bold;" onclick="openCountryModal()">+ 新建国家</div>
+                    </div>
                 </div>
                 <div id="sideMenu" style="display:none;">
                     <div class="sec">创作</div>
@@ -295,27 +297,49 @@
             renderProjects();
         }
         function renderCountrySelect() {
-            const sel = document.getElementById('countrySelect');
-            sel.innerHTML = '<option value="">+ 添加国家</option>';
-            curProject.countries.forEach((c, i) => {
-                const opt = document.createElement('option');
-                opt.value = i; opt.textContent = c.tag+' - '+c.name;
-                sel.appendChild(opt);
-            });
-            if (curProject.countries.length === 0) {
+            const btn = document.getElementById('countryDropdownBtn');
+            const list = document.getElementById('countryDropdownList');
+            list.innerHTML = '';
+            if (!curProject.countries.length) {
+                btn.textContent = '+ 新建国家';
                 document.getElementById('emptyCountry').style.display='block';
                 document.getElementById('sideMenu').style.display='none';
                 document.getElementById('editorTabs').style.display='none';
-            } else {
-                document.getElementById('emptyCountry').style.display='none';
-                document.getElementById('sideMenu').style.display='block';
-                document.getElementById('editorTabs').style.display='block';
+                return;
             }
+            document.getElementById('emptyCountry').style.display='none';
+            document.getElementById('sideMenu').style.display='block';
+            document.getElementById('editorTabs').style.display='block';
+            curProject.countries.forEach((c, i) => {
+                const row = document.createElement('div');
+                row.style = 'display:flex;justify-content:space-between;align-items:center;padding:10px;cursor:pointer;border-bottom:1px solid #f5f1e8;';
+                row.innerHTML = '<span>'+c.tag+' - '+c.name+'</span><span style="display:flex;gap:10px;align-items:center;"><span style="color:#999;">×</span></span>';
+                row.onclick = () => {
+                    btn.textContent = c.tag+' - '+c.name;
+                    document.getElementById('countryDropdown').style.display='none';
+                };
+                row.querySelector('span span').onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm('确定删除国家 '+c.name+'？所有相关数据都会被清空')) {
+                        curProject.countries.splice(i,1);
+                        localStorage.setItem('hoi_projects', JSON.stringify(projects));
+                        renderCountrySelect();
+                    }
+                };
+                list.appendChild(row);
+            });
         }
-        function onCountryChange() {
-            const v = document.getElementById('countrySelect').value;
-            if (v === '') { document.getElementById('modalMask').style.display='block'; document.getElementById('countryModal').style.display='block'; return; }
+        function openCountryModal() {
+            document.getElementById('countryDropdown').style.display='none';
+            document.getElementById('modalMask').style.display='block';
+            document.getElementById('countryModal').style.display='block';
         }
+        document.getElementById('countryDropdownBtn').onclick = (e) => {
+            e.stopPropagation();
+            const dd = document.getElementById('countryDropdown');
+            dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+        };
+        document.body.addEventListener('click', () => document.getElementById('countryDropdown').style.display='none');
         function closeCountryModal() { document.getElementById('modalMask').style.display='none'; document.getElementById('countryModal').style.display='none'; document.getElementById('countrySelect').value=''; }
         function addCountry() {
             const t = document.getElementById('ncTag').value.toUpperCase();
