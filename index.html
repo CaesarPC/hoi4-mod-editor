@@ -118,13 +118,25 @@
         </div>
         <div class="page">
             <h2 style="margin-bottom:20px;">我的项目</h2>
-            <div class="stats">
+            <div class="stats" style="display:none;">
                 <div class="stat"><div class="l">项目</div><div class="v" id="statProj">0</div></div>
                 <div class="stat"><div class="l">国家</div><div class="v">0</div></div>
                 <div class="stat"><div class="l">国策</div><div class="v">0</div></div>
                 <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:15px;">无</div></div>
             </div>
-            <div id="projList"><div style="text-align:center;color:#999;padding:40px;">还没有项目，点右上角新建开始创作</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
+                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff8f0;" onclick="showProjModal()">
+                    <div style="font-size:36px;color:#b0a898;margin-bottom:10px;">+</div>
+                    <div style="font-size:17px;font-weight:bold;color:#5c3a0e;">新建空项目</div>
+                    <div style="color:#999;font-size:13px;margin-top:6px;">从零开始做全新Mod</div>
+                </div>
+                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff8f0;" onclick="alert('导入Mod功能即将上线，现在可先新建空项目')">
+                    <div style="font-size:36px;color:#b0a898;margin-bottom:10px;">↑</div>
+                    <div style="font-size:17px;font-weight:bold;color:#5c3a0e;">导入已有Mod</div>
+                    <div style="color:#999;font-size:13px;margin-top:6px;">上传mod文件夹/zip，AI自动解析结构</div>
+                </div>
+            </div>
+            <div id="projList"></div>
         </div>
     </div>
 
@@ -228,15 +240,14 @@
         function renderProjects() {
             document.getElementById('statProj').textContent = projects.length;
             const list = document.getElementById('projList');
-            if (!projects.length) { list.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">还没有项目，点右上角新建开始创作</div>'; return; }
             list.innerHTML = '';
             projects.forEach((p, idx) => {
-                if (!p || !p.name) return; // 过滤掉损坏的空气项目
+                if (!p || !p.name) return;
                 const tags = Array.isArray(p.tags) ? p.tags : [];
                 const countries = Array.isArray(p.countries) ? p.countries : [];
                 const d = document.createElement('div');
                 d.className = 'proj-item';
-                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+tags.join('、')+' · '+countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
+                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+tags.join('、')+' · '+countries.length+'个国家 · 修改于刚刚</div></div><button class="btn sm">继续创作</button>';
                 d.querySelector('button').onclick = (e) => { e.stopPropagation(); openEditor(idx); };
                 d.onclick = () => openEditor(idx);
                 list.appendChild(d);
