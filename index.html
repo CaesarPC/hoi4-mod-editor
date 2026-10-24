@@ -8,60 +8,65 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
-        .topbar { background: #fff; padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 60px; }
-        .topbar h1 { font-size: 18px; color: #5c3a0e; }
-        .btn { background: #5c3a0e; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; margin-right: 8px; font-size: 14px; }
-        .btn.sec { background: #e0d8c8; color: #333; }
-        .page { padding: 25px; height: calc(100vh - 60px); overflow-y: auto; }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .stat { background: #fff; padding: 20px; border-radius: 12px; }
-        .stat .l { color: #999; font-size: 13px; margin-bottom: 8px; }
-        .stat .v { font-size: 28px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .card { background: #fff; padding: 20px; border-radius: 12px; cursor: pointer; position: relative; min-height:150px; }
-        .card .n { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
-        .card .t { color: #5c3a0e; font-size: 13px; margin-bottom: 12px; }
-        .new { border: 2px dashed #d0c8b8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; }
+        .topbar { background: #fff; padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 64px; }
+        .topbar .logo { font-size: 20px; font-weight: bold; color: #5c3a0e; }
+        .topbar .spacer { flex:1; }
+        .btn { background: #5c3a0e; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; margin-right: 8px; font-size: 14px; }
+        .btn.sec { background: #fff; color: #333; border: 1px solid #e0d8c8; }
+        .page { padding: 30px; height: calc(100vh - 64px); overflow-y: auto; }
+        .page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 30px; }
+        .stat { background: #fff; padding: 22px; border-radius: 12px; }
+        .stat .l { color: #999; font-size: 13px; margin-bottom: 10px; }
+        .stat .v { font-size: 30px; font-weight: bold; }
+        .proj-list { background: #fff; padding: 20px; border-radius: 12px; border-left: 4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; }
+        .proj-list .n { font-size:20px; font-weight:bold; margin-bottom:8px; }
+        .proj-list .meta { color:#999; font-size:13px; }
         .editor { display: none; height: 100vh; flex-direction: column; }
         .main { display: flex; flex: 1; overflow: hidden; }
         .side { width: 240px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
         .side .item { padding: 10px 20px; cursor: pointer; color: #666; font-size: 14px; }
         .side .item.on { background: #f0ebe0; color: #5c3a0e; border-right: 3px solid #5c3a0e; font-weight: bold; }
-        .side .sec { padding: 12px 20px; font-size: 11px; color: #999; margin-top: 8px; }
         .content { flex: 1; padding: 20px; overflow-y: auto; min-width: 0; }
         .form { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #666; font-size: 12px; }
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; font-size: 16px; }
-        .chat-box { height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 15px; background: #faf8f3; margin-bottom: 15px; }
-        .modal-mask { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:99; }
-        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:25px; border-radius:12px; z-index:100; width:90%; max-width:450px; }
-        .modal h3 { margin-bottom:15px; }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:99; }
+        .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:25px; border-radius:12px; z-index:100; width:90%; max-width:450px; }
+        @media (max-width:768px) { .stats { grid-template-columns:repeat(2,1fr); } }
     </style>
 </head>
 <body>
     <div id="home">
-        <div class="topbar"><h1>HOI4 Mod 编辑器</h1></div>
+        <div class="topbar">
+            <div class="logo">HOI4 Mod 编辑器</div>
+            <div class="spacer"></div>
+            <button class="btn sec">导入已有 mod</button>
+            <button class="btn" onclick="document.getElementById('newProjModal').style.display='block';document.getElementById('modalMask').style.display='block'">新建空项目</button>
+        </div>
         <div class="page">
-            <h2 style="margin-bottom:20px;">我的项目</h2>
+            <div class="page-head"><h2>我的项目</h2></div>
             <div class="stats">
-                <div class="stat"><div class="l">项目数</div><div class="v">1</div></div>
-                <div class="stat"><div class="l">国家数</div><div class="v">1</div></div>
-                <div class="stat"><div class="l">实体数</div><div class="v">0</div></div>
-                <div class="stat"><div class="l">存储</div><div class="v" style="font-size:16px;">本地存储</div></div>
+                <div class="stat"><div class="l">项目</div><div class="v">1</div></div>
+                <div class="stat"><div class="l">国家</div><div class="v">1</div></div>
+                <div class="stat"><div class="l">实体</div><div class="v">1</div></div>
+                <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:18px;">刚刚</div></div>
             </div>
-            <div class="grid" id="projGrid">
-                <div class="card" onclick="openproj()"><div class="n">红色伪装</div><div class="t">SSF - 苏维埃社会主义联邦</div></div>
-                <div class="card new" onclick="openNewProjModal()"><div>+ 新建项目</div></div>
-                <div class="card new"><div>导入mod ZIP</div></div>
+            <div class="proj-list" onclick="openproj()">
+                <div>
+                    <div class="n">红色伪装</div>
+                    <div class="meta">SSF · 1 角色 · 1 国策 · 0 科技</div>
+                </div>
+                <button class="btn">继续编辑</button>
             </div>
         </div>
     </div>
 
     <div id="ed" class="editor">
         <div class="topbar">
-            <h1>红色伪装</h1>
-            <button class="btn sec" style="margin-left:auto;" onclick="gohome()">返回</button>
+            <div class="logo">红色伪装</div>
+            <div class="spacer"></div>
+            <button class="btn sec" onclick="gohome()">返回首页</button>
         </div>
         <div class="main">
             <div class="side">
@@ -72,32 +77,34 @@
             </div>
             <div class="content">
                 <div id="ai" class="tab">
-                    <div class="chat-box" id="chatbox"><div style="color:#666;">你好！我是AI助手。</div></div>
-                    <div style="display:flex;gap:10px;">
-                        <input id="chatinput" placeholder="输入消息..." style="flex:1;font-size:16px;">
-                        <button class="btn" id="sendbtn">发送</button>
+                    <div style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">AI 助手</h3>
+                        <div style="height:300px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:15px;">
+                            <div style="color:#666;">你好！我是你的mod制作助手。</div>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <input placeholder="输入消息..." style="flex:1;">
+                            <button class="btn">发送</button>
+                        </div>
                     </div>
                 </div>
                 <div id="countries" class="tab" style="display:none;">
                     <div style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">国家列表</h3>
-                        <div class="form"><label>新国家TAG（3字母）</label><input id="newctag" maxlength="3" placeholder="GER"></div>
-                        <div class="form"><label>新国家名称</label><input id="newcname" placeholder="第四帝国"></div>
-                        <button class="btn" onclick="addcountry()">+ 添加国家</button>
-                        <div id="countrylist" style="margin-top:15px;"></div>
+                        <div style="background:#faf8f3;padding:12px;border-radius:8px;margin-bottom:8px;">SSF - 苏维埃社会主义联邦</div>
+                        <button class="btn">+ 添加国家</button>
                     </div>
                 </div>
                 <div id="pol" class="tab" style="display:none;">
                     <div style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">政治支持率（总和必须100%）</h3>
+                        <h3 style="margin-bottom:15px;">政治支持率</h3>
                         <div style="display:flex;gap:20px;align-items:center;">
                             <div style="width:200px;"><canvas id="polchart"></canvas></div>
                             <div style="flex:1;">
-                                <div class="form"><label>共产主义 %</label><input type="number" id="supcom" value="80"></div>
-                                <div class="form"><label>民主主义 %</label><input type="number" id="supdem" value="5"></div>
-                                <div class="form"><label>法西斯主义 %</label><input type="number" id="supfas" value="5"></div>
-                                <div class="form"><label>中立主义 %</label><input type="number" id="supneu" value="10"></div>
-                                <div id="piecheck" style="font-weight:bold;color:green;"></div>
+                                <div class="form"><label>共产主义 %</label><input type="number" value="80"></div>
+                                <div class="form"><label>民主主义 %</label><input type="number" value="5"></div>
+                                <div class="form"><label>法西斯主义 %</label><input type="number" value="5"></div>
+                                <div class="form"><label>中立主义 %</label><input type="number" value="10"></div>
                             </div>
                         </div>
                     </div>
@@ -105,40 +112,25 @@
                 <div id="focus" class="tab" style="display:none;">
                     <div style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">国策树</h3>
-                        <div class="form"><label>国策名</label><input id="fname"></div>
-                        <button class="btn" onclick="addfocus()">+ 添加国策</button>
+                        <div style="background:#faf8f3;padding:12px;border-radius:8px;">翻牌联合国 · 耗时70天</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal-mask" id="modalMask"></div>
-    <div class="modal" id="newProjModal">
-        <h3>新建项目</h3>
-        <div class="form"><label>模组名称</label><input id="npName" placeholder="例如 红色伪装2"></div>
-        <div class="form"><label>国家TAG（3字母）</label><input id="npTag" placeholder="例如GER" maxlength="3"></div>
-        <div class="form"><label>国家名称</label><input id="npCname" placeholder="例如 第四帝国"></div>
+    <div class="modal-mask" id="modalMask" style="display:none;"></div>
+    <div class="modal" id="newProjModal" style="display:none;">
+        <h3 style="margin-bottom:15px;">新建空项目</h3>
+        <div class="form"><label>模组名称</label><input id="npName"></div>
+        <div class="form"><label>初始国家TAG（3字母）</label><input id="npTag" maxlength="3"></div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
-            <button class="btn sec" onclick="closeNewProjModal()">取消</button>
-            <button class="btn" onclick="confirmNewProj()">创建</button>
+            <button class="btn sec" onclick="document.getElementById('newProjModal').style.display='none';document.getElementById('modalMask').style.display='none'">取消</button>
+            <button class="btn" onclick="document.getElementById('newProjModal').style.display='none';document.getElementById('modalMask').style.display='none'">创建</button>
         </div>
     </div>
 
     <script>
-        let polchart;
-        function openNewProjModal() {
-            document.getElementById('modalMask').style.display='block';
-            document.getElementById('newProjModal').style.display='block';
-        }
-        function closeNewProjModal() {
-            document.getElementById('modalMask').style.display='none';
-            document.getElementById('newProjModal').style.display='none';
-        }
-        function confirmNewProj() {
-            alert('项目创建成功！');
-            closeNewProjModal();
-        }
         function openproj() { document.getElementById('home').style.display='none'; document.getElementById('ed').style.display='flex'; }
         function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; }
         document.querySelectorAll('.item').forEach(item => {
@@ -148,26 +140,13 @@
                 document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none');
                 document.getElementById(item.dataset.tab).style.display='block';
                 if (item.dataset.tab == 'pol') {
-                    polchart = new Chart(document.getElementById('polchart'), {
+                    new Chart(document.getElementById('polchart'), {
                         type:'doughnut',
-                        data:{labels:['共产主义','民主主义','法西斯主义','中立主义'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]},
-                        options:{responsive:true}
+                        data:{labels:['共产主义','民主主义','法西斯主义','中立主义'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}
                     });
                 }
             };
         });
-        let countries = [{tag:'SSF', name:'苏维埃社会主义联邦'}];
-        function addcountry() {
-            const t = document.getElementById('newctag').value.toUpperCase();
-            const n = document.getElementById('newcname').value;
-            if (!t || !n) return;
-            countries.push({tag:t, name:n});
-            rendercountries();
-        }
-        function rendercountries() {
-            document.getElementById('countrylist').innerHTML = countries.map(c => '<div style="padding:10px;background:#faf8f3;border-radius:8px;margin-bottom:8px;">'+c.tag+' - '+c.name+'</div>').join('');
-        }
-        rendercountries();
     </script>
 </body>
 </html>
