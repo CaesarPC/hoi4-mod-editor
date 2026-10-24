@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/file-saver/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background: #f5f1e8; height: 100vh; overflow: hidden; }
+        body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; height: 100vh; overflow: hidden; }
         .topbar { background: #fff; padding: 12px 20px; display: flex; align-items: center; border-bottom: 1px solid #e0d8c8; height: 60px; }
         .topbar h1 { font-size: 18px; color: #5c3a0e; margin-right: 20px; }
         .menu-btn { display: none; background: #5c3a0e; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; margin-right: 15px; }
@@ -31,12 +31,13 @@
         .side .item { padding: 10px 20px; cursor: pointer; color: #666; font-size: 14px; }
         .side .item.on { background: #f0ebe0; color: #5c3a0e; border-right: 3px solid #5c3a0e; font-weight: bold; }
         .side .sec { padding: 12px 20px; font-size: 11px; color: #999; margin-top: 8px; }
-        .content { flex: 1; padding: 20px; overflow-y: auto; }
+        .content { flex: 1; padding: 20px; overflow-y: auto; min-width: 0; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #666; font-size: 12px; }
         input, textarea, select { width: 100%; padding: 8px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; font-size: 14px; }
         textarea { height: 80px; resize: vertical; }
-        .list-item { padding: 10px; background: #faf8f3; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #5c3a0e; }
+        .list-item { padding: 10px; background: #faf8f3; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #5c3a0e; gap:10px; }
         .ov { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; }
         @media (max-width: 768px) {
             .menu-btn { display: block; }
@@ -45,20 +46,21 @@
             .ov.open { display: block; }
             .stats { grid-template-columns: repeat(2,1fr); }
             .grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div id="home">
         <div class="topbar">
-            <button class="menu-btn" onclick="toggleside()">☰</button>
+            <button class="menu-btn" id="menuBtn">☰</button>
             <h1>HOI4 Mod 编辑器</h1>
         </div>
         <div class="page">
             <h2 style="margin-bottom:20px;">我的项目</h2>
             <div class="stats">
                 <div class="stat"><div class="l">项目数</div><div class="v" id="statProj">1</div></div>
-                <div class="stat"><div class="l">国家数</div><div class="v" id="statCountry">1</div></div>
+                <div class="stat"><div class="l">国家数</div><div class="v">1</div></div>
                 <div class="stat"><div class="l">实体数</div><div class="v" id="statEnt">0</div></div>
                 <div class="stat"><div class="l">存储</div><div class="v" style="font-size:16px;">浏览器本地存储</div></div>
             </div>
@@ -68,135 +70,167 @@
 
     <div id="ed" class="editor">
         <div class="topbar">
-            <button class="menu-btn" onclick="toggleside()">☰</button>
+            <button class="menu-btn" id="menuBtn2">☰</button>
             <h1 id="edTitle">项目</h1>
-            <button class="btn sec" style="margin-left:auto;" onclick="gohome()">返回首页</button>
-            <button class="btn" onclick="exportZip()">导出ZIP</button>
+            <button class="btn sec" id="backBtn" style="margin-left:auto;">返回首页</button>
+            <button class="btn" id="exportBtn">导出mod ZIP</button>
         </div>
-        <div class="ov" id="ov" onclick="toggleside()"></div>
+        <div class="ov" id="ov"></div>
         <div class="main">
             <div class="side" id="side">
-                <div class="item on" onclick="showtab('ai',this)">AI一键生成</div>
-                <div class="item" onclick="showtab('country',this)">国家基础</div>
+                <div class="item on" data-tab="ai">AI一键生成</div>
+                <div class="item" data-tab="country">国家基础</div>
                 <div class="sec">创作</div>
-                <div class="item" onclick="showtab('char',this)">角色</div>
-                <div class="item" onclick="showtab('pol',this)">政治</div>
-                <div class="item" onclick="showtab('idea',this)">国家精神</div>
-                <div class="item" onclick="showtab('focus',this)">国策树</div>
-                <div class="item" onclick="showtab('event',this)">事件</div>
-                <div class="item" onclick="showtab('dec',this)">决议</div>
+                <div class="item" data-tab="char">角色</div>
+                <div class="item" data-tab="pol">政治与意识形态</div>
+                <div class="item" data-tab="idea">国家精神/理念</div>
+                <div class="item" data-tab="focus">国策树</div>
+                <div class="item" data-tab="event">事件</div>
+                <div class="item" data-tab="dec">决议</div>
+                <div class="item" data-tab="tech">科技加成</div>
+                <div class="item" data-tab="state">核心领土</div>
             </div>
             <div class="content">
                 <div id="ai" class="tab">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">AI快速生成</h3>
-                        <textarea id="aiprompt" style="height:100px;" placeholder="输入你的mod世界观，一键生成起步内容"></textarea>
+                        <textarea id="aiprompt" style="height:100px;" placeholder="输入mod世界观，一键生成起步内容"></textarea>
                         <br><br>
-                        <button class="btn" onclick="aigen()">一键生成起步包</button>
+                        <button class="btn" id="aigenBtn">一键生成完整起步包</button>
                     </div>
                 </div>
                 <div id="country" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">国家设置</h3>
-                        <div class="form"><label>国家TAG（3字母）</label><input id="ctag" value="SSF"></div>
-                        <div class="form"><label>国家名</label><input id="cname" value="苏维埃社会主义联邦"></div>
-                        <button class="btn" onclick="savecountry()">保存</button>
+                        <h3 style="margin-bottom:15px;">国家基础设置</h3>
+                        <div class="form-row">
+                            <div class="form"><label>国家3字母TAG</label><input id="ctag" value="SSF"></div>
+                            <div class="form"><label>国家全名</label><input id="cname" value="苏维埃社会主义联邦"></div>
+                            <div class="form"><label>执政党意识形态</label><select id="cideology"><option value="communism">共产主义</option><option value="democratic">民主主义</option><option value="fascism">法西斯主义</option><option value="neutrality">中立主义</option></select></div>
+                            <div class="form"><label>首都地块ID</label><input type="number" id="ccapital" value="42"></div>
+                        </div>
+                        <button class="btn" id="saveCountryBtn">保存国家设置</button>
                     </div>
                 </div>
                 <div id="char" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">添加角色</h3>
-                        <div class="form"><label>名字</label><input id="charname" placeholder="角色名"></div>
-                        <div class="form"><label>类型</label><select id="chartype"><option>国家领袖</option><option>将军</option><option>顾问</option></select></div>
-                        <button class="btn" onclick="addchar()">+ 添加</button>
+                        <h3 style="margin-bottom:15px;">添加新角色</h3>
+                        <div class="form"><label>角色名字</label><input id="charname" placeholder="例如 普京"></div>
+                        <div class="form"><label>角色类型</label><select id="chartype"><option value="country_leader">国家领袖</option><option value="general">将军</option><option value="fleet_commander">海军将领</option><option value="advisor">政治顾问</option></select></div>
+                        <button class="btn" id="addCharBtn">+ 添加角色</button>
                     </div>
-                    <div id="charlist" style="margin-top:15px;"></div>
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加角色</h3><div id="charlist"></div></div>
                 </div>
                 <div id="pol" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">政治支持率</h3>
-                        <div class="form"><label>共产主义%</label><input id="supcom" value="80"></div>
-                        <div class="form"><label>民主主义%</label><input id="supdem" value="5"></div>
-                        <button class="btn" onclick="savepol()">保存</button>
+                        <h3 style="margin-bottom:15px;">政治支持率设置</h3>
+                        <div class="form-row">
+                            <div class="form"><label>民主主义支持率（%）</label><input type="number" id="supdem" value="5"></div>
+                            <div class="form"><label>共产主义支持率（%）</label><input type="number" id="supcom" value="80"></div>
+                            <div class="form"><label>法西斯主义支持率（%）</label><input type="number" id="supfas" value="5"></div>
+                            <div class="form"><label>中立主义支持率（%）</label><input type="number" id="supneu" value="10"></div>
+                        </div>
+                        <button class="btn" id="savePolBtn">保存政治设置</button>
                     </div>
                 </div>
                 <div id="idea" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">添加国家精神</h3>
-                        <div class="form"><label>名字</label><input id="ideaname" placeholder="精神名"></div>
-                        <button class="btn" onclick="addidea()">+ 添加</button>
+                        <h3 style="margin-bottom:15px;">添加国家精神/理念</h3>
+                        <div class="form"><label>理念名字</label><input id="ideaname" placeholder="例如 苏联重生"></div>
+                        <div class="form"><label>修正效果（每行一条脚本）</label><textarea id="ideamod" placeholder="例如 stability_factor = 0.1"></textarea></div>
+                        <button class="btn" id="addIdeaBtn">+ 添加理念</button>
                     </div>
-                    <div id="idealist" style="margin-top:15px;"></div>
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加理念</h3><div id="idealist"></div></div>
                 </div>
                 <div id="focus" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">添加国策</h3>
-                        <div class="form"><label>国策名</label><input id="focusname" placeholder="国策名"></div>
-                        <div class="form"><label>耗时天数</label><input id="focuscost" value="70"></div>
-                        <button class="btn" onclick="addfocus()">+ 添加</button>
+                        <div class="form"><label>国策名字</label><input id="focusname" placeholder="例如 翻牌联合国"></div>
+                        <div class="form"><label>国策耗时（天）</label><input type="number" id="focuscost" value="70"></div>
+                        <div class="form"><label>国策效果脚本</label><textarea id="focuseffect" placeholder="例如 add_political_power = 150"></textarea></div>
+                        <button class="btn" id="addFocusBtn">+ 添加国策</button>
                     </div>
-                    <div id="focuslist" style="margin-top:15px;"></div>
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加国策</h3><div id="focuslist"></div></div>
                 </div>
                 <div id="event" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">添加事件</h3>
-                        <div class="form"><label>标题</label><input id="evtitle" placeholder="事件标题"></div>
-                        <div class="form"><label>描述</label><textarea id="evdesc"></textarea></div>
-                        <button class="btn" onclick="addevent()">+ 添加事件</button>
+                        <div class="form"><label>事件标题</label><input id="evtitle" placeholder="例如 联合国大会翻牌"></div>
+                        <div class="form"><label>事件描述</label><textarea id="evdesc" placeholder="输入事件剧情描述..."></textarea></div>
+                        <button class="btn" id="addEventBtn">+ 添加事件</button>
                     </div>
-                    <div id="eventlist" style="margin-top:15px;"></div>
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加事件</h3><div id="eventlist"></div></div>
                 </div>
                 <div id="dec" class="tab" style="display:none;">
                     <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
                         <h3 style="margin-bottom:15px;">添加决议</h3>
-                        <div class="form"><label>名字</label><input id="decname" placeholder="决议名"></div>
-                        <button class="btn" onclick="adddec()">+ 添加决议</button>
+                        <div class="form"><label>决议名字</label><input id="decname" placeholder="例如 宣示主权"></div>
+                        <div class="form"><label>消耗政治点</label><input type="number" id="deccost" value="100"></div>
+                        <button class="btn" id="addDecBtn">+ 添加决议</button>
                     </div>
-                    <div id="declist" style="margin-top:15px;"></div>
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;margin-top:15px;"><h3 style="margin-bottom:15px;">已添加决议</h3><div id="declist"></div></div>
+                </div>
+                <div id="tech" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">国家科技加成</h3>
+                        <div class="form"><label>额外科研槽数量</label><input type="number" id="techslots" value="0"></div>
+                        <div class="form"><label>全局科研速度加成（%）</label><input type="number" id="techspeed" value="10"></div>
+                        <button class="btn" id="saveTechBtn">保存科技加成</button>
+                    </div>
+                </div>
+                <div id="state" class="tab" style="display:none;">
+                    <div class="card" style="background:#fff;padding:20px;border-radius:12px;">
+                        <h3 style="margin-bottom:15px;">初始核心领土（每行一个地块ID）</h3>
+                        <div class="form"><textarea id="corestates" style="height:150px;" placeholder="例如 42, 44, 46"></textarea></div>
+                        <button class="btn" id="saveStateBtn">保存核心领土</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <input type="file" id="impfile" accept=".zip" style="display:none">
 
     <script>
         let projects = [];
         let cur = null;
         function load() {
-            const s = localStorage.getItem('hoi_proj');
+            const s = localStorage.getItem('hoi_proj_v2');
             if (s) projects = JSON.parse(s);
             if (!projects.length) {
-                projects = [{id:'p1', name:'红色伪装', data:{tag:'SSF', cname:'苏维埃社会主义联邦', chars:[], ideas:[], focuses:[], events:[], decs:[]}}];
+                projects = [{"id":"p1", "name":"红色伪装", "data":{"tag":"SSF", "cname":"苏维埃社会主义联邦", "ideology":"communism", "capital":42, "support":{"dem":5, "com":80, "fas":5, "neu":10}, "techSlots":0, "techSpeed":10, "coreStates":[42,44,46], "chars":[{"name":"斯大林", "type":"country_leader"},{"name":"朱可夫", "type":"general"}], "ideas":[{"name":"苏联重生", "mod":"stability_factor = 0.1"}], "focuses":[{"name":"翻牌联合国", "cost":70, "effect":"add_political_power = 150"},{"name":"恢复工业", "cost":90, "effect":"add_factory_building_speed = 0.15"}], "events":[{"title":"联合国大会", "desc":"2024年联合国大会上，苏联代表突然翻牌宣布恢复主权。"}], "decs":[]}}];
                 save();
             }
             renderhome();
         }
-        function save() { localStorage.setItem('hoi_proj', JSON.stringify(projects)); renderhome(); }
+        function save() { localStorage.setItem('hoi_proj_v2', JSON.stringify(projects)); renderhome(); }
         function renderhome() {
             document.getElementById('statProj').textContent = projects.length;
+            let total = 0;
+            projects.forEach(p => total += p.data.chars.length + p.data.ideas.length + p.data.focuses.length + p.data.events.length + p.data.decs.length);
+            document.getElementById('statEnt').textContent = total;
             const g = document.getElementById('projGrid');
             g.innerHTML = '';
             projects.forEach((p, idx) => {
                 const d = document.createElement('div');
                 d.className = 'card';
-                d.innerHTML = '<button class="btn danger" style="position:absolute;top:10px;right:10px;">删除</button><div class="n">'+p.name+'</div><div class="t">'+p.data.tag+'</div>';
-                d.querySelector('.danger').onclick = (e) => { e.stopPropagation(); delp(idx); };
+                d.innerHTML = '<div class="n">'+p.name+'</div><div class="t">'+p.data.tag+' - '+p.data.cname+'</div><div style="font-size:12px;color:#999;">'+p.data.chars.length+'角色 '+p.data.focuses.length+'国策 '+p.data.events.length+'事件</div>';
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn danger';
+                delBtn.style.cssText = 'position:absolute;top:10px;right:10px;';
+                delBtn.textContent = '删除';
+                delBtn.onclick = (e) => { e.stopPropagation(); if(confirm('删除项目？')) { projects.splice(idx,1); save(); } };
+                d.appendChild(delBtn);
                 d.onclick = () => open(p.id);
                 g.appendChild(d);
             });
             const nc = document.createElement('div');
             nc.className = 'card new';
-            nc.textContent = '+ 新建项目';
-            nc.onclick = newp;
+            nc.textContent = '+ 新建空项目';
+            nc.onclick = () => { const n = prompt('输入新项目名字：'); if(n) { projects.push({id:'p'+Date.now(), name:n, data:{tag:'XXX', cname:n, ideology:'neutrality', capital:0, support:{dem:33,com:33,fas:0,neu:34}, techSlots:0, techSpeed:0, coreStates:[], chars:[], ideas:[], focuses:[], events:[], decs:[]}}); save(); open(projects[projects.length-1].id); } };
             g.appendChild(nc);
             const ic = document.createElement('div');
             ic.className = 'card new';
-            ic.textContent = '导入mod ZIP';
-            ic.onclick = () => document.getElementById('impfile').click();
+            ic.textContent = '导入本地mod ZIP';
             g.appendChild(ic);
         }
-        function delp(idx) { if(confirm('删除这个项目？')) { projects.splice(idx,1); save(); } }
-        function newp() { const n = prompt('项目名'); if(n) { projects.push({id:'p'+Date.now(), name:n, data:{tag:'XXX', cname:n, chars:[], ideas:[], focuses:[], events:[], decs:[]}}); save(); open(projects[projects.length-1].id); } }
         function open(id) {
             cur = projects.find(p=>p.id==id);
             document.getElementById('edTitle').textContent = cur.name;
@@ -204,52 +238,67 @@
             document.getElementById('ed').style.display='flex';
             document.getElementById('ctag').value = cur.data.tag;
             document.getElementById('cname').value = cur.data.cname;
+            document.getElementById('supcom').value = cur.data.support.com;
+            document.getElementById('supdem').value = cur.data.support.dem;
+            document.getElementById('supfas').value = cur.data.support.fas;
+            document.getElementById('supneu').value = cur.data.support.neu;
             renderall();
         }
-        function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; save(); }
-        function toggleside() { document.getElementById('side').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); }
-        function showtab(t, el) { document.querySelectorAll('.item').forEach(i=>i.classList.remove('on')); el.classList.add('on'); document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none'); document.getElementById(t).style.display='block'; if(innerWidth<768) toggleside(); }
-        function savecountry() { cur.data.tag = document.getElementById('ctag').value.toUpperCase(); cur.data.cname = document.getElementById('cname').value; save(); alert('保存成功'); }
-        function savepol() { alert('政治设置已保存'); }
-        function addchar() { const n = document.getElementById('charname').value.trim(); if(!n) return; cur.data.chars.push({name:n}); renderall(); save(); }
-        function addidea() { const n = document.getElementById('ideaname').value.trim(); if(!n) return; cur.data.ideas.push({name:n}); renderall(); save(); }
-        function addfocus() { const n = document.getElementById('focusname').value.trim(); const c = document.getElementById('focuscost').value; if(!n) return; cur.data.focuses.push({name:n, cost:c}); renderall(); save(); }
-        function addevent() { const t = document.getElementById('evtitle').value.trim(); if(!t) return; cur.data.events.push({title:t}); renderall(); save(); }
-        function adddec() { const n = document.getElementById('decname').value.trim(); if(!n) return; cur.data.decs.push({name:n}); renderall(); save(); }
-        function rendlist(id, arr, delfn) {
+        document.getElementById('backBtn').onclick = () => { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; save(); };
+        document.getElementById('menuBtn').onclick = () => { document.getElementById('side').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); };
+        document.getElementById('menuBtn2').onclick = () => { document.getElementById('side').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); };
+        document.getElementById('ov').onclick = () => { document.getElementById('side').classList.remove('open'); document.getElementById('ov').classList.remove('open'); };
+        document.querySelectorAll('.item').forEach(item => {
+            item.onclick = () => {
+                document.querySelectorAll('.item').forEach(i=>i.classList.remove('on'));
+                item.classList.add('on');
+                const t = item.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none');
+                document.getElementById(t).style.display='block';
+                if(innerWidth<768) { document.getElementById('side').classList.remove('open'); document.getElementById('ov').classList.remove('open'); }
+            };
+        });
+        document.getElementById('saveCountryBtn').onclick = () => { cur.data.tag = document.getElementById('ctag').value.toUpperCase(); cur.data.cname = document.getElementById('cname').value; cur.data.ideology = document.getElementById('cideology').value; cur.data.capital = Number(document.getElementById('ccapital').value); save(); alert('国家设置保存成功'); };
+        document.getElementById('savePolBtn').onclick = () => { cur.data.support.com = Number(document.getElementById('supcom').value); cur.data.support.dem = Number(document.getElementById('supdem').value); cur.data.support.fas = Number(document.getElementById('supfas').value); cur.data.support.neu = Number(document.getElementById('supneu').value); save(); alert('政治设置保存成功'); };
+        document.getElementById('addCharBtn').onclick = () => { const n = document.getElementById('charname').value.trim(); if(!n) return; cur.data.chars.push({name:n, type:document.getElementById('chartype').value}); renderall(); save(); };
+        document.getElementById('addIdeaBtn').onclick = () => { const n = document.getElementById('ideaname').value.trim(); if(!n) return; cur.data.ideas.push({name:n, mod:document.getElementById('ideamod').value}); renderall(); save(); };
+        document.getElementById('addFocusBtn').onclick = () => { const n = document.getElementById('focusname').value.trim(); if(!n) return; cur.data.focuses.push({name:n, cost:Number(document.getElementById('focuscost').value), effect:document.getElementById('focuseffect').value}); renderall(); save(); };
+        document.getElementById('addEventBtn').onclick = () => { const t = document.getElementById('evtitle').value.trim(); if(!t) return; cur.data.events.push({title:t, desc:document.getElementById('evdesc').value}); renderall(); save(); };
+        document.getElementById('addDecBtn').onclick = () => { const n = document.getElementById('decname').value.trim(); if(!n) return; cur.data.decs.push({name:n, cost:Number(document.getElementById('deccost').value)}); renderall(); save(); };
+        document.getElementById('saveTechBtn').onclick = () => { cur.data.techSlots = Number(document.getElementById('techslots').value); cur.data.techSpeed = Number(document.getElementById('techspeed').value); save(); alert('科技加成保存成功'); };
+        document.getElementById('saveStateBtn').onclick = () => { const txt = document.getElementById('corestates').value.trim(); cur.data.coreStates = txt.split(',').map(s=>Number(s.trim())).filter(n=>!isNaN(n)); save(); alert('核心领土保存成功'); };
+        document.getElementById('aigenBtn').onclick = () => { cur.data.chars.push({name:'新领袖', type:'country_leader'}); cur.data.ideas.push({name:'建国团结', mod:'stability_factor = 0.1'}); cur.data.focuses.push({name:'巩固政权', cost:70, effect:'add_political_power = 150'}); cur.data.events.push({title:'建国公告', desc:'正式回归世界舞台'}); renderall(); save(); alert('生成完成！'); };
+        document.getElementById('exportBtn').onclick = () => {
+            const zip = new JSZip();
+            zip.file('descriptor.mod', 'version="1.0.0"');
+            zip.folder('common/country_tags').file('00.txt', cur.data.tag + ' = "' + cur.data.cname + '"');
+            zip.generateAsync({type:'blob'}).then(c => saveAs(c, cur.name+'.zip'));
+            alert('导出成功！');
+        };
+        function rendlist(id, arr, key) {
             const el = document.getElementById(id);
             el.innerHTML = '';
             arr.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
-                div.innerHTML = '<span>'+Object.values(item)[0]+'</span>';
+                const info = document.createElement('div');
+                info.style.flex = 1;
+                info.textContent = item[key] || item.name || item.title;
                 const btn = document.createElement('button');
                 btn.className = 'btn danger';
                 btn.textContent = '删除';
-                btn.onclick = () => window[delfn](i);
+                btn.onclick = () => { arr.splice(i,1); renderall(); save(); };
+                div.appendChild(info);
                 div.appendChild(btn);
                 el.appendChild(div);
             });
         }
         function renderall() {
-            rendlist('charlist', cur.data.chars, 'delchar');
-            rendlist('idealist', cur.data.ideas, 'delidea');
-            rendlist('focuslist', cur.data.focuses, 'delfocus');
-            rendlist('eventlist', cur.data.events, 'delevent');
-            rendlist('declist', cur.data.decs, 'deldec');
-        }
-        function delchar(i) { cur.data.chars.splice(i,1); renderall(); save(); }
-        function delidea(i) { cur.data.ideas.splice(i,1); renderall(); save(); }
-        function delfocus(i) { cur.data.focuses.splice(i,1); renderall(); save(); }
-        function delevent(i) { cur.data.events.splice(i,1); renderall(); save(); }
-        function deldec(i) { cur.data.decs.splice(i,1); renderall(); save(); }
-        function aigen() { cur.data.chars.push({name:'领袖'}); cur.data.ideas.push({name:'建国团结'}); cur.data.focuses.push({name:'巩固政权', cost:70}); cur.data.events.push({title:'建国公告'}); renderall(); save(); alert('生成完成！已加1领袖+1精神+1国策+1事件'); }
-        function exportZip() {
-            const zip = new JSZip();
-            zip.file('descriptor.mod', 'version="1.0.0"\nname="'+cur.name+'"\n');
-            zip.folder('common/country_tags').file('00.txt', cur.data.tag + ' = "' + cur.data.cname + '"');
-            zip.generateAsync({type:'blob'}).then(c => saveAs(c, cur.name+'.zip'));
-            alert('导出成功！');
+            rendlist('charlist', cur.data.chars, 'name');
+            rendlist('idealist', cur.data.ideas, 'name');
+            rendlist('focuslist', cur.data.focuses, 'name');
+            rendlist('eventlist', cur.data.events, 'title');
+            rendlist('declist', cur.data.decs, 'name');
         }
         load();
     </script>
