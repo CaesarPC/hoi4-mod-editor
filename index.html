@@ -14,7 +14,6 @@
         .btn { background: #5c3a0e; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; margin-right: 8px; font-size: 14px; }
         .btn.sec { background: #fff; color: #333; border: 1px solid #e0d8c8; }
         .page { padding: 30px; height: calc(100vh - 64px); overflow-y: auto; }
-        .page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 30px; }
         .stat { background: #fff; padding: 22px; border-radius: 12px; }
         .stat .l { color: #999; font-size: 13px; margin-bottom: 10px; }
@@ -25,15 +24,17 @@
         .editor { display: none; height: 100vh; flex-direction: column; }
         .main { display: flex; flex: 1; overflow: hidden; }
         .side { width: 240px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
+        .side .sec { padding: 8px 20px; font-size: 11px; color: #999; margin-top: 10px; }
         .side .item { padding: 10px 20px; cursor: pointer; color: #666; font-size: 14px; }
         .side .item.on { background: #f0ebe0; color: #5c3a0e; border-right: 3px solid #5c3a0e; font-weight: bold; }
         .content { flex: 1; padding: 20px; overflow-y: auto; min-width: 0; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; }
         .form { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #666; font-size: 12px; }
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e0d8c8; border-radius: 6px; background: #faf8f3; font-size: 16px; }
         .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:99; }
         .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:25px; border-radius:12px; z-index:100; width:90%; max-width:450px; }
-        @media (max-width:768px) { .stats { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:768px) { .stats { grid-template-columns:repeat(2,1fr); } .side { display:none; } }
     </style>
 </head>
 <body>
@@ -45,11 +46,11 @@
             <button class="btn" onclick="openModal()">新建空项目</button>
         </div>
         <div class="page">
-            <div class="page-head"><h2>我的项目</h2></div>
+            <h2 style="margin-bottom:25px;">我的项目</h2>
             <div class="stats">
                 <div class="stat"><div class="l">项目</div><div class="v" id="statProj">1</div></div>
-                <div class="stat"><div class="l">国家</div><div class="v">1</div></div>
-                <div class="stat"><div class="l">实体</div><div class="v" id="statEnt">1</div></div>
+                <div class="stat"><div class="l">国家</div><div class="v" id="statCountry">1</div></div>
+                <div class="stat"><div class="l">实体</div><div class="v" id="statEnt">0</div></div>
                 <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:18px;">刚刚</div></div>
             </div>
             <div id="projList"></div>
@@ -64,17 +65,29 @@
         </div>
         <div class="main">
             <div class="side">
-                <div class="item on" data-tab="ai">AI 对话</div>
-                <div class="item" data-tab="countries">国家列表</div>
-                <div class="item" data-tab="pol">政治支持率</div>
+                <div class="item on" data-tab="ai">AI 助手</div>
+                <div class="sec">创作</div>
+                <div class="item" data-tab="country">国家基础</div>
+                <div class="item" data-tab="char">角色</div>
+                <div class="item" data-tab="ideology">意识形态</div>
+                <div class="item" data-tab="spirit">国家精神</div>
                 <div class="item" data-tab="focus">国策树</div>
+                <div class="item" data-tab="event">事件</div>
+                <div class="item" data-tab="decision">决议</div>
+                <div class="item" data-tab="tech">科技树</div>
+                <div class="sec">地图</div>
+                <div class="item" data-tab="map">地块编辑器</div>
+                <div class="sec">系统</div>
+                <div class="item" data-tab="loc">本地化</div>
+                <div class="item" data-tab="export">导出mod</div>
+                <div class="item" data-tab="settings">设置</div>
             </div>
             <div class="content">
                 <div id="ai" class="tab">
-                    <div style="background:#fff;padding:20px;border-radius:12px;">
+                    <div class="card">
                         <h3 style="margin-bottom:15px;">AI 助手</h3>
                         <div style="height:300px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:15px;">
-                            <div style="color:#666;">你好！我是你的mod制作助手。</div>
+                            <div style="color:#666;">你好！我是你的mod制作助手，帮你写国策、事件、本地化。</div>
                         </div>
                         <div style="display:flex;gap:10px;">
                             <input placeholder="输入消息..." style="flex:1;">
@@ -82,15 +95,24 @@
                         </div>
                     </div>
                 </div>
-                <div id="countries" class="tab" style="display:none;">
-                    <div style="background:#fff;padding:20px;border-radius:12px;">
-                        <h3 style="margin-bottom:15px;">国家列表</h3>
-                        <div style="background:#faf8f3;padding:12px;border-radius:8px;margin-bottom:8px;">SSF - 苏维埃社会主义联邦</div>
-                        <button class="btn">+ 添加国家</button>
+                <div id="country" class="tab" style="display:none;">
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">国家基础设置</h3>
+                        <div class="form"><label>国家TAG</label><input value="SSF"></div>
+                        <div class="form"><label>国家全名</label><input value="苏维埃社会主义联邦"></div>
+                        <div class="form"><label>国家简称</label><input value="苏联"></div>
                     </div>
                 </div>
-                <div id="pol" class="tab" style="display:none;">
-                    <div style="background:#fff;padding:20px;border-radius:12px;">
+                <div id="char" class="tab" style="display:none;">
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">角色管理</h3>
+                        <div class="form"><label>角色姓名</label><input placeholder="例如 斯大林"></div>
+                        <button class="btn">+ 添加角色</button>
+                        <div style="margin-top:15px;background:#faf8f3;padding:12px;border-radius:8px;">斯大林 · 领袖</div>
+                    </div>
+                </div>
+                <div id="ideology" class="tab" style="display:none;">
+                    <div class="card">
                         <h3 style="margin-bottom:15px;">政治支持率</h3>
                         <div style="display:flex;gap:20px;align-items:center;">
                             <div style="width:200px;"><canvas id="polchart"></canvas></div>
@@ -103,10 +125,51 @@
                         </div>
                     </div>
                 </div>
+                <div id="spirit" class="tab" style="display:none;">
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">国家精神</h3>
+                        <div class="form"><label>精神名称</label><input placeholder="例如 伟大卫国战争"></div>
+                        <button class="btn">+ 添加精神</button>
+                    </div>
+                </div>
                 <div id="focus" class="tab" style="display:none;">
-                    <div style="background:#fff;padding:20px;border-radius:12px;">
+                    <div class="card">
                         <h3 style="margin-bottom:15px;">国策树</h3>
-                        <div style="background:#faf8f3;padding:12px;border-radius:8px;">翻牌联合国 · 耗时70天</div>
+                        <div class="form"><label>国策名称</label><input placeholder="例如 联合国大会翻牌"></div>
+                        <button class="btn">+ 添加国策</button>
+                        <div style="margin-top:15px;background:#faf8f3;padding:12px;border-radius:8px;">联合国大会翻牌 · 耗时70天</div>
+                    </div>
+                </div>
+                <div id="event" class="tab" style="display:none;">
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">事件编辑器</h3>
+                        <div class="form"><label>事件标题</label><input placeholder="例如 潜伏33年的真相"></div>
+                        <button class="btn">+ 添加事件</button>
+                    </div>
+                </div>
+                <div id="decision" class="tab" style="display:none;">
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">决议管理</h3>
+                        <div class="form"><label>决议名称</label><input placeholder="例如 重启五年计划"></div>
+                        <button class="btn">+ 添加决议</button>
+                    </div>
+                </div>
+                <div id="tech" class="tab" style="display:none;">
+                    <div class="card"><h3>科技树编辑器</h3></div>
+                </div>
+                <div id="map" class="tab" style="display:none;">
+                    <div class="card"><h3>地块编辑器</h3><p style="color:#999;">点选地块变色、框选区域即将上线</p></div>
+                </div>
+                <div id="loc" class="tab" style="display:none;">
+                    <div class="card"><h3>本地化文本</h3></div>
+                </div>
+                <div id="export" class="tab" style="display:none;">
+                    <div class="card"><h3>导出为HOI4 mod ZIP</h3><button class="btn">导出</button></div>
+                </div>
+                <div id="settings" class="tab" style="display:none;">
+                    <div class="card"><h3>设置</h3>
+                        <div class="form"><label>自定义API Key</label><input type="password" placeholder="sk-..."></div>
+                        <button class="btn">保存设置</button>
                     </div>
                 </div>
             </div>
@@ -133,10 +196,9 @@
         }
         function renderHome() {
             document.getElementById('statProj').textContent = projects.length;
-            document.getElementById('statEnt').textContent = projects.reduce((a,b)=>a+1,0);
             const list = document.getElementById('projList');
             list.innerHTML = '';
-            projects.forEach((p, idx) => {
+            projects.forEach((p) => {
                 const d = document.createElement('div');
                 d.className = 'proj-item';
                 d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+p.tag+' · '+p.meta+'</div></div><button class="btn">继续编辑</button>';
@@ -144,22 +206,15 @@
                 list.appendChild(d);
             });
         }
-        function openModal() {
-            document.getElementById('modalMask').style.display='block';
-            document.getElementById('newProjModal').style.display='block';
-        }
-        function closeModal() {
-            document.getElementById('modalMask').style.display='none';
-            document.getElementById('newProjModal').style.display='none';
-        }
+        function openModal() { document.getElementById('modalMask').style.display='block'; document.getElementById('newProjModal').style.display='block'; }
+        function closeModal() { document.getElementById('modalMask').style.display='none'; document.getElementById('newProjModal').style.display='none'; }
         function createProj() {
             const n = document.getElementById('npName').value.trim();
             const t = document.getElementById('npTag').value.trim().toUpperCase();
             if (!n || !t) { alert('请填全内容'); return; }
             projects.push({name:n, tag:t, meta:'0 角色 · 0 国策 · 0 科技'});
             localStorage.setItem('hoi_projects', JSON.stringify(projects));
-            closeModal();
-            renderHome();
+            closeModal(); renderHome();
         }
         function openProj(name) {
             document.getElementById('edTitle').textContent = name;
@@ -173,7 +228,7 @@
                 item.classList.add('on');
                 document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none');
                 document.getElementById(item.dataset.tab).style.display='block';
-                if (item.dataset.tab == 'pol') {
+                if (item.dataset.tab == 'ideology') {
                     new Chart(document.getElementById('polchart'), {
                         type:'doughnut',
                         data:{labels:['共产主义','民主主义','法西斯主义','中立主义'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}
