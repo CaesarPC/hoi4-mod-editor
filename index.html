@@ -8,6 +8,10 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.2s ease; }
         body { font-family: -apple-system, sans-serif; background: #f5f1e8; color: #333; }
+        ::-webkit-scrollbar { width:8px; }
+        ::-webkit-scrollbar-track { background:#f5f1e8; }
+        ::-webkit-scrollbar-thumb { background:#d4c8b0; border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:#b8a888; }
         .topbar { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); padding:12px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); height:64px; position:sticky; top:0; z-index:50; }
         .logo { display:flex; align-items:center; gap:12px; }
         .logo-icon { width:40px; height:40px; background:#5c3a0e; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; }
