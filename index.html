@@ -24,7 +24,8 @@
         .hero p { font-size:18px; color:#666; line-height:1.8; max-width:700px; margin-bottom:32px; }
         .hero-btns { display:flex; gap:16px; }
         .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:30px; }
-        .stat { background:#fff; padding:18px; border-radius:10px; }
+        .stat { background:#fff; padding:18px; border-radius:10px; transition: all 0.15s; }
+        .stat:hover { box-shadow:0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
         .stat .l { color:#999; font-size:12px; margin-bottom:8px; }
         .stat .v { font-size:24px; font-weight:bold; }
         .proj-item { background:#fff; padding:18px; border-radius:10px; border-left:4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
