@@ -44,8 +44,10 @@
         label { display:block; margin-bottom:5px; color:#666; font-size:13px; }
         input, select { width:100%; padding:10px 12px; border:1px solid #e0d8c8; border-radius:8px; font-size:15px; background:#faf8f3; outline:none; transition: all 0.2s; }
         input:focus { border-color:#5c3a0e; box-shadow:0 0 0 3px rgba(92,58,14,0.1); background:#fff; }
-        .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:99; display:none; }
-        .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:24px; border-radius:16px; z-index:100; width:90%; max-width:420px; display:none; box-shadow:0 10px 40px rgba(0,0,0,0.15); }
+        .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:99; display:none; opacity:0; transition: opacity 0.2s; }
+        .modal-mask.show { opacity:1; }
+        .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.95); background:#fff; padding:24px; border-radius:16px; z-index:100; width:90%; max-width:420px; display:none; box-shadow:0 10px 40px rgba(0,0,0,0.15); transition: all 0.2s; }
+        .modal.show { transform:translate(-50%,-50%) scale(1); }
         .type-pick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0; }
         .type-pick div { padding:8px 4px; border:1px solid #e0d8c8; border-radius:6px; text-align:center; font-size:12px; cursor:pointer; }
         .type-pick div.on { border-color:#5c3a0e; background:#f0ebe0; color:#5c3a0e; }
