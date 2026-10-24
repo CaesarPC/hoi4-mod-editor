@@ -117,26 +117,35 @@
             <button class="btn sm" onclick="showProjModal()">新建项目</button>
         </div>
         <div class="page">
-            <h2 style="margin-bottom:20px;">我的项目</h2>
-            <div class="stats" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;">我的项目</h2>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn sm" onclick="alert('导入Mod功能即将上线')">导入已有mod</button>
+                    <button class="btn sec sm" onclick="showProjModal()">新建空项目</button>
+                </div>
+            </div>
+            <div class="stats">
                 <div class="stat"><div class="l">项目</div><div class="v" id="statProj">0</div></div>
                 <div class="stat"><div class="l">国家</div><div class="v">0</div></div>
-                <div class="stat"><div class="l">国策</div><div class="v">0</div></div>
-                <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:15px;">无</div></div>
+                <div class="stat"><div class="l">实体</div><div class="v">0</div></div>
+                <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:16px;">无</div></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
-                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff8f0;" onclick="showProjModal()">
-                    <div style="font-size:36px;color:#b0a898;margin-bottom:10px;">+</div>
-                    <div style="font-size:17px;font-weight:bold;color:#5c3a0e;">新建空项目</div>
-                    <div style="color:#999;font-size:13px;margin-top:6px;">从零开始做全新Mod</div>
+            <h3 style="font-size:14px;color:#666;margin:25px 0 12px;">最近打开</h3>
+            <div id="recentBar"></div>
+            <div style="display:flex;gap:10px;align-items:center;margin:20px 0;">
+                <input placeholder="搜项目名 / 国家TAG / mod基础..." style="flex:1;">
+                <span style="color:#666;font-size:14px;">排序：</span>
+                <button class="btn sec sm">最近编辑</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px;">
+                <div id="projCards"></div>
+                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff;" onclick="showProjModal()">
+                    <div style="font-size:36px;color:#b0a898;">+</div>
                 </div>
-                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff8f0;" onclick="alert('导入Mod功能即将上线，现在可先新建空项目')">
-                    <div style="font-size:36px;color:#b0a898;margin-bottom:10px;">↑</div>
-                    <div style="font-size:17px;font-weight:bold;color:#5c3a0e;">导入已有Mod</div>
-                    <div style="color:#999;font-size:13px;margin-top:6px;">上传mod文件夹/zip，AI自动解析结构</div>
+                <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff;" onclick="alert('导入Mod功能即将上线')">
+                    <div style="font-size:36px;color:#b0a898;">↑</div>
                 </div>
             </div>
-            <div id="projList"></div>
         </div>
     </div>
 
@@ -239,18 +248,26 @@
         function logout() { localStorage.removeItem('hoi_user'); location.reload(); }
         function renderProjects() {
             document.getElementById('statProj').textContent = projects.length;
-            const list = document.getElementById('projList');
-            list.innerHTML = '';
+            const recentBar = document.getElementById('recentBar');
+            const projCards = document.getElementById('projCards');
+            recentBar.innerHTML = '';
+            projCards.innerHTML = '';
             projects.forEach((p, idx) => {
                 if (!p || !p.name) return;
                 const tags = Array.isArray(p.tags) ? p.tags : [];
                 const countries = Array.isArray(p.countries) ? p.countries : [];
-                const d = document.createElement('div');
-                d.className = 'proj-item';
-                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+tags.join('、')+' · '+countries.length+'个国家 · 修改于刚刚</div></div><button class="btn sm">继续创作</button>';
-                d.querySelector('button').onclick = (e) => { e.stopPropagation(); openEditor(idx); };
-                d.onclick = () => openEditor(idx);
-                list.appendChild(d);
+                // 最近打开条
+                const bar = document.createElement('div');
+                bar.style = 'background:#fff;border:1px solid #e6dcc8;border-radius:12px;padding:20px;display:flex;justify-content:space-between;align-items:center;';
+                bar.innerHTML = '<div><div style="color:#999;font-size:13px;margin-bottom:6px;">● 编辑中 · 刚刚</div><div style="font-size:22px;font-weight:bold;margin-bottom:8px;">'+p.name+'</div><div style="color:#999;font-size:13px;">'+tags.join('、')+' · '+countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
+                bar.querySelector('button').onclick = () => openEditor(idx);
+                recentBar.appendChild(bar);
+                // 底部网格小卡片
+                const card = document.createElement('div');
+                card.style = 'background:#fff;border-radius:12px;padding:20px;cursor:pointer;';
+                card.innerHTML = '<div style="font-size:17px;font-weight:bold;margin-bottom:4px;">'+p.name+'</div><div style="color:#999;font-size:12px;">'+tags.join('、')+'</div>';
+                card.onclick = () => openEditor(idx);
+                projCards.appendChild(card);
             });
         }
         function showProjModal() { document.getElementById('modalMask').style.display='block'; document.getElementById('projModal').style.display='block'; }
