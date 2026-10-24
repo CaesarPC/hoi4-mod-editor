@@ -19,9 +19,9 @@
         .stat { background: #fff; padding: 22px; border-radius: 12px; }
         .stat .l { color: #999; font-size: 13px; margin-bottom: 10px; }
         .stat .v { font-size: 30px; font-weight: bold; }
-        .proj-list { background: #fff; padding: 20px; border-radius: 12px; border-left: 4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; }
-        .proj-list .n { font-size:20px; font-weight:bold; margin-bottom:8px; }
-        .proj-list .meta { color:#999; font-size:13px; }
+        .proj-item { background: #fff; padding: 20px; border-radius: 12px; border-left: 4px solid #5c3a0e; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; cursor:pointer; }
+        .proj-item .n { font-size:20px; font-weight:bold; margin-bottom:8px; }
+        .proj-item .meta { color:#999; font-size:13px; }
         .editor { display: none; height: 100vh; flex-direction: column; }
         .main { display: flex; flex: 1; overflow: hidden; }
         .side { width: 240px; background: #faf8f3; border-right: 1px solid #e0d8c8; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
@@ -42,29 +42,23 @@
             <div class="logo">HOI4 Mod 编辑器</div>
             <div class="spacer"></div>
             <button class="btn sec">导入已有 mod</button>
-            <button class="btn" onclick="document.getElementById('newProjModal').style.display='block';document.getElementById('modalMask').style.display='block'">新建空项目</button>
+            <button class="btn" onclick="openModal()">新建空项目</button>
         </div>
         <div class="page">
             <div class="page-head"><h2>我的项目</h2></div>
             <div class="stats">
-                <div class="stat"><div class="l">项目</div><div class="v">1</div></div>
+                <div class="stat"><div class="l">项目</div><div class="v" id="statProj">1</div></div>
                 <div class="stat"><div class="l">国家</div><div class="v">1</div></div>
-                <div class="stat"><div class="l">实体</div><div class="v">1</div></div>
+                <div class="stat"><div class="l">实体</div><div class="v" id="statEnt">1</div></div>
                 <div class="stat"><div class="l">最近编辑</div><div class="v" style="font-size:18px;">刚刚</div></div>
             </div>
-            <div class="proj-list" onclick="openproj()">
-                <div>
-                    <div class="n">红色伪装</div>
-                    <div class="meta">SSF · 1 角色 · 1 国策 · 0 科技</div>
-                </div>
-                <button class="btn">继续编辑</button>
-            </div>
+            <div id="projList"></div>
         </div>
     </div>
 
     <div id="ed" class="editor">
         <div class="topbar">
-            <div class="logo">红色伪装</div>
+            <div class="logo" id="edTitle">红色伪装</div>
             <div class="spacer"></div>
             <button class="btn sec" onclick="gohome()">返回首页</button>
         </div>
@@ -125,14 +119,54 @@
         <div class="form"><label>模组名称</label><input id="npName"></div>
         <div class="form"><label>初始国家TAG（3字母）</label><input id="npTag" maxlength="3"></div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
-            <button class="btn sec" onclick="document.getElementById('newProjModal').style.display='none';document.getElementById('modalMask').style.display='none'">取消</button>
-            <button class="btn" onclick="document.getElementById('newProjModal').style.display='none';document.getElementById('modalMask').style.display='none'">创建</button>
+            <button class="btn sec" onclick="closeModal()">取消</button>
+            <button class="btn" onclick="createProj()">创建</button>
         </div>
     </div>
 
     <script>
-        function openproj() { document.getElementById('home').style.display='none'; document.getElementById('ed').style.display='flex'; }
-        function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; }
+        let projects = [];
+        try { projects = JSON.parse(localStorage.getItem('hoi_projects') || '[]'); } catch(e) { projects = []; }
+        if (!projects.length) {
+            projects = [{name:'红色伪装', tag:'SSF', meta:'1 角色 · 1 国策 · 0 科技'}];
+            localStorage.setItem('hoi_projects', JSON.stringify(projects));
+        }
+        function renderHome() {
+            document.getElementById('statProj').textContent = projects.length;
+            document.getElementById('statEnt').textContent = projects.reduce((a,b)=>a+1,0);
+            const list = document.getElementById('projList');
+            list.innerHTML = '';
+            projects.forEach((p, idx) => {
+                const d = document.createElement('div');
+                d.className = 'proj-item';
+                d.innerHTML = '<div><div class="n">'+p.name+'</div><div class="meta">'+p.tag+' · '+p.meta+'</div></div><button class="btn">继续编辑</button>';
+                d.onclick = () => openProj(p.name);
+                list.appendChild(d);
+            });
+        }
+        function openModal() {
+            document.getElementById('modalMask').style.display='block';
+            document.getElementById('newProjModal').style.display='block';
+        }
+        function closeModal() {
+            document.getElementById('modalMask').style.display='none';
+            document.getElementById('newProjModal').style.display='none';
+        }
+        function createProj() {
+            const n = document.getElementById('npName').value.trim();
+            const t = document.getElementById('npTag').value.trim().toUpperCase();
+            if (!n || !t) { alert('请填全内容'); return; }
+            projects.push({name:n, tag:t, meta:'0 角色 · 0 国策 · 0 科技'});
+            localStorage.setItem('hoi_projects', JSON.stringify(projects));
+            closeModal();
+            renderHome();
+        }
+        function openProj(name) {
+            document.getElementById('edTitle').textContent = name;
+            document.getElementById('home').style.display='none';
+            document.getElementById('ed').style.display='flex';
+        }
+        function gohome() { document.getElementById('ed').style.display='none'; document.getElementById('home').style.display='block'; renderHome(); }
         document.querySelectorAll('.item').forEach(item => {
             item.onclick = () => {
                 document.querySelectorAll('.item').forEach(i=>i.classList.remove('on'));
@@ -147,6 +181,7 @@
                 }
             };
         });
+        renderHome();
     </script>
 </body>
 </html>
