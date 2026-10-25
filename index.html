@@ -195,10 +195,10 @@
             <div class="content">
                 <div id="emptyCountry" style="text-align:center;color:#999;padding:80px 0;">先从左上角选择"+ 添加国家"，创建你的第一个国家</div>
                 <div id="editorTabs" style="display:none;">
-                    <div id="ai" class="tab"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">AI助手</h3><div style="height:250px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:12px;"><div style="color:#666;">你好，我是mod制作助手</div></div><div style="display:flex;gap:8px;"><input placeholder="输入消息..." style="flex:1;"><button class="btn sm">发送</button></div></div></div>
+                    <div id="ai" class="tab"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">AI助手</h3><div id="chatBox" style="height:250px;background:#faf8f3;border-radius:8px;padding:15px;margin-bottom:12px;overflow-y:auto;"><div style="color:#666;">你好，我是mod制作助手，你可以让我帮你写国策、事件、决议代码</div></div><div style="display:flex;gap:8px;"><input id="chatInput" placeholder="输入消息..." style="flex:1;"><button class="btn sm" onclick="sendChat()">发送</button></div></div></div>
                     <div id="country" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">国家基础设置</h3><div class="form"><label>国家TAG</label><input id="editCtag"></div><div class="form"><label>国家全名</label><input id="editCname"></div></div></div>
                     <div id="char" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>角色管理</h3><p style="color:#999;margin-top:10px;">暂无角色，点击右上角「添加国家」或后续将支持手动添加角色</p></div></div>
-                    <div id="pol" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">政治支持率</h3><div style="display:flex;gap:20px;align-items:center;"><div style="width:180px;"><canvas id="polchart"></canvas></div><div style="flex:1;"><div class="form"><label>共产主义 %</label><input type="number" value="80"></div><div class="form"><label>民主主义 %</label><input type="number" value="5"></div><div class="form"><label>法西斯主义 %</label><input type="number" value="5"></div><div class="form"><label>中立主义 %</label><input type="number" value="10"></div></div></div></div></div>
+                    <div id="pol" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">政治支持率 <span id="polSum" style="font-size:13px;color:#999;font-weight:normal;">总和：100%</span></h3><div style="display:flex;gap:20px;align-items:center;"><div style="width:180px;"><canvas id="polchart"></canvas></div><div style="flex:1;"><div class="form"><label>共产主义 %</label><input type="number" id="polCom" value="80" oninput="updatePolChart()"></div><div class="form"><label>民主主义 %</label><input type="number" id="polDem" value="5" oninput="updatePolChart()"></div><div class="form"><label>法西斯主义 %</label><input type="number" id="polFac" value="5" oninput="updatePolChart()"></div><div class="form"><label>中立主义 %</label><input type="number" id="polNeu" value="10" oninput="updatePolChart()"></div><button class="btn sm" style="margin-top:10px;" onclick="alert('政治支持率已保存')">保存设置</button></div></div></div></div>
                     <div id="spirit" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>国家精神</h3><p style="color:#999;margin-top:10px;">暂无国家精神，后续将支持新建理念、添加修正效果</p></div></div>
                     <div id="focus" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>国策树</h3><p style="color:#999;margin-top:10px;">国策树编辑器正在开发中，后续支持节点拖拽、AI自动生成国策链</p></div></div>
                     <div id="event" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>事件编辑器</h3><p style="color:#999;margin-top:10px;">事件编辑器正在开发中，后续支持弹窗选项、触发条件配置</p></div></div>
@@ -420,7 +420,7 @@
                 item.classList.add('on');
                 document.querySelectorAll('.tab').forEach(t2=>t2.style.display='none');
                 document.getElementById(item.dataset.tab).style.display='block';
-                if (item.dataset.tab == 'pol') new Chart(document.getElementById('polchart'), {type:'doughnut',data:{labels:['共','民','法','中'],datasets:[{data:[80,5,5,10],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}});
+                if (item.dataset.tab == 'pol') updatePolChart();
             };
         });
         let savedUser = localStorage.getItem('hoi_user');
@@ -431,13 +431,43 @@
             renderProjects();
         }
         function exportMod() {
-            const modName = document.getElementById('projName').value || '我的Mod';
+            const modName = curProject ? curProject.name : '我的Mod';
             const content = `name="${modName}"\nversion="1.0.0"\nsupported_version="1.19.*"\n`;
-            const blob = new Blob([content], {type:'text/plain'});
+            const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = url;
             a.download = 'descriptor.mod';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            setTimeout(()=>URL.revokeObjectURL(url), 1000);
+        }
+        let polChartInstance = null;
+        function updatePolChart() {
+            const c = parseInt(document.getElementById('polCom').value)||0;
+            const d = parseInt(document.getElementById('polDem').value)||0;
+            const f = parseInt(document.getElementById('polFac').value)||0;
+            const n = parseInt(document.getElementById('polNeu').value)||0;
+            const sum = c+d+f+n;
+            document.getElementById('polSum').textContent = `总和：${sum}%`;
+            if (sum > 100) document.getElementById('polSum').style.color = '#c0392b';
+            else document.getElementById('polSum').style.color = '#999';
+            if (polChartInstance) polChartInstance.destroy();
+            polChartInstance = new Chart(document.getElementById('polchart'), {type:'doughnut',data:{labels:['共产主义','民主主义','法西斯主义','中立主义'],datasets:[{data:[c,d,f,n],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}});
+        }
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            const box = document.getElementById('chatBox');
+            box.innerHTML += `<div style="margin:8px 0;text-align:right;"><span style="background:#5c3a0e;color:white;padding:8px 12px;border-radius:12px;display:inline-block;">${msg}</span></div>`;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+            setTimeout(()=>{
+                box.innerHTML += `<div style="margin:8px 0;"><span style="background:#f0ebe0;padding:8px 12px;border-radius:12px;display:inline-block;">收到，我正在为你生成对应HOI4代码...</span></div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 500);
         }
     </script>
 </body>
