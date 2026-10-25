@@ -413,6 +413,13 @@
                     btn.textContent = c.tag+' - '+c.name;
                     document.getElementById('editCtag').value = c.tag;
                     document.getElementById('editCname').value = c.name;
+                    // 回填当前国家独立的政治参数
+                    const pol = c.political || [80,5,5,10];
+                    document.getElementById('polCom').value = pol[0];
+                    document.getElementById('polDem').value = pol[1];
+                    document.getElementById('polFac').value = pol[2];
+                    document.getElementById('polNeu').value = pol[3];
+                    updatePolChart();
                     document.getElementById('countryDropdown').style.display='none';
                 };
                 row.querySelector('span span').onclick = (e) => {
@@ -455,8 +462,8 @@
             const n = document.getElementById('ncName').value.trim();
             if (!t || !n) { alert('请填全国家代码和名称'); closeCountryModal(); return; }
             if (!curProject.countries) curProject.countries = [];
-            curProject.countries.push({tag:t, name:n});
-            localStorage.setItem('hoi_projects', JSON.stringify(projects));
+            curProject.countries.push({tag:t, name:n, political:[80,5,5,10], spirits:[], focuses:[]});
+            saveUserProjects();
             document.getElementById('ncTag').value = '';
             document.getElementById('ncName').value = '';
             closeCountryModal();
@@ -511,9 +518,11 @@
             const n = parseInt(document.getElementById('polNeu').value)||0;
             const sum = c+d+f+n;
             if (sum !== 100) { alert('四项支持率总和必须等于100%才能保存'); return; }
+            curProject.countries[curCountryIdx].political = [c,d,f,n];
+            saveUserProjects();
             if (polChartInstance) polChartInstance.destroy();
             polChartInstance = new Chart(document.getElementById('polchart'), {type:'doughnut',data:{labels:['共产主义','民主主义','法西斯主义','中立主义'],datasets:[{data:[c,d,f,n],backgroundColor:['#e74c3c','#3498db','#2ecc71','#95a5a6']}]}});
-            alert('政治支持率已保存');
+            alert('当前国家政治设置已保存');
         }
         let curCountryIdx = 0;
         function saveCountryInfo() {
