@@ -203,10 +203,10 @@
                     <div id="country" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">国家基础设置</h3><div class="form"><label>国家TAG</label><input id="editCtag"></div><div class="form"><label>国家全名</label><input id="editCname"></div><button class="btn sm" style="margin-top:15px;" onclick="saveCountryInfo()">保存国家信息</button></div></div>
                     <div id="char" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">已添加国家列表</h3><div id="countryListBox"></div><p style="color:#999;margin-top:15px;">可通过左上角国家下拉菜单添加新国家</p></div></div>
                     <div id="pol" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3 style="margin-bottom:15px;">政治支持率 <span id="polSum" style="font-size:13px;color:#999;font-weight:normal;">总和：100%</span></h3><div style="display:flex;gap:20px;align-items:center;"><div style="width:180px;"><canvas id="polchart"></canvas></div><div style="flex:1;"><div class="form"><label>共产主义 %</label><input type="number" id="polCom" value="80" min="0" max="100" oninput="updatePolChart()"></div><div class="form"><label>民主主义 %</label><input type="number" id="polDem" value="5" min="0" max="100" oninput="updatePolChart()"></div><div class="form"><label>法西斯主义 %</label><input type="number" id="polFac" value="5" min="0" max="100" oninput="updatePolChart()"></div><div class="form"><label>中立主义 %</label><input type="number" id="polNeu" value="10" min="0" max="100" oninput="updatePolChart()"></div><div style="color:#c0392b;font-size:13px;margin:8px 0;">* 四项加起来必须等于100%才能保存</div><button class="btn sm" onclick="savePolChart()">保存设置</button></div></div></div></div>
-                    <div id="spirit" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>国家精神</h3><button class="btn sec sm" onclick="addSimpleItem('spiritList','国家精神名称')">+ 新建国家精神</button></div><div id="spiritList"></div></div></div>
-                    <div id="focus" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>国策树</h3><button class="btn sec sm" onclick="addSimpleItem('focusList','国策名称')">+ 新建国策</button></div><div id="focusList"></div></div></div>
-                    <div id="event" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>事件编辑器</h3><button class="btn sec sm" onclick="addSimpleItem('eventList','事件名称')">+ 新建事件</button></div><div id="eventList"></div></div></div>
-                    <div id="decision" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>决议管理</h3><button class="btn sec sm" onclick="addSimpleItem('decisionList','决议名称')">+ 新建决议</button></div><div id="decisionList"></div></div></div>
+                    <div id="spirit" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>国家精神</h3><button class="btn sec sm" onclick="addSimpleItem('spiritList','spirits','国家精神名称')">+ 新建国家精神</button></div><div id="spiritList"></div></div></div>
+                    <div id="focus" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>国策树</h3><button class="btn sec sm" onclick="addSimpleItem('focusList','focuses','国策名称')">+ 新建国策</button></div><div id="focusList"></div></div></div>
+                    <div id="event" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>事件编辑器</h3><button class="btn sec sm" onclick="addSimpleItem('eventList','events','事件名称')">+ 新建事件</button></div><div id="eventList"></div></div></div>
+                    <div id="decision" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3>决议管理</h3><button class="btn sec sm" onclick="addSimpleItem('decisionList','decisions','决议名称')">+ 新建决议</button></div><div id="decisionList"></div></div></div>
                     <div id="loc" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>本地化</h3><p style="color:#999;margin-top:10px;">本地化编辑器正在开发中，后续支持一键导出yml语言文件</p></div></div>
                     <div id="export" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>导出mod</h3><p style="color:#999;margin:10px 0 15px;">导出后直接放进HOI4 mod文件夹即可游玩</p><button class="btn sm" onclick="exportMod()">导出mod文件</button></div></div>
                 </div>
@@ -375,7 +375,7 @@
             if (!n) { alert('请填项目名'); return; }
             const tags = [];
             document.querySelectorAll('.type-pick div.on').forEach(d=>tags.push(d.dataset.type));
-            projects.push({name:n, tags:tags, countries:[]});
+            projects.push({name:n, tags:tags, countries:[], spirits:[], focuses:[], events:[], decisions:[]});
             saveUserProjects();
             closeModal(); renderProjects();
         }
@@ -385,6 +385,7 @@
             document.getElementById('projectListPage').style.display='none';
             document.getElementById('editorPage').style.display='flex';
             renderCountrySelect();
+            renderSimpleLists();
         }
         function backToProjects() {
             document.getElementById('editorPage').style.display='none';
@@ -527,15 +528,37 @@
             renderCountrySelect();
             alert('国家信息已保存');
         }
-        function addSimpleItem(listId, placeholder) {
+        function addSimpleItem(listId, key, placeholder) {
             const name = prompt('请输入'+placeholder);
             if (!name) return;
-            const list = document.getElementById(listId);
-            const item = document.createElement('div');
-            item.style = 'padding:12px;background:#faf8f3;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
-            item.innerHTML = '<span>'+name+'</span><span style="color:#c0392b;cursor:pointer;" class="del-item">删除</span>';
-            item.querySelector('.del-item').onclick = () => item.remove();
-            list.appendChild(item);
+            if (!curProject[key]) curProject[key] = [];
+            curProject[key].push(name);
+            saveUserProjects();
+            renderSimpleLists();
+        }
+        function renderSimpleLists() {
+            const map = [
+                ['spiritList','spirits'],
+                ['focusList','focuses'],
+                ['eventList','events'],
+                ['decisionList','decisions']
+            ];
+            map.forEach(([domId, key]) => {
+                const list = document.getElementById(domId);
+                list.innerHTML = '';
+                const items = curProject[key] || [];
+                items.forEach((item, i) => {
+                    const div = document.createElement('div');
+                    div.style = 'padding:12px;background:#faf8f3;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
+                    div.innerHTML = '<span>'+item+'</span><span style="color:#c0392b;cursor:pointer;" class="del-item">删除</span>';
+                    div.querySelector('.del-item').onclick = () => {
+                        curProject[key].splice(i,1);
+                        saveUserProjects();
+                        renderSimpleLists();
+                    };
+                    list.appendChild(div);
+                });
+            });
         }
         function sendChat() {
             const input = document.getElementById('chatInput');
