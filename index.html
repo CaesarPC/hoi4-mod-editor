@@ -205,7 +205,7 @@
                     <div id="event" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>事件编辑器</h3><p style="color:#999;margin-top:10px;">事件编辑器正在开发中，后续支持弹窗选项、触发条件配置</p></div></div>
                     <div id="decision" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>决议管理</h3><p style="color:#999;margin-top:10px;">决议分类管理正在开发中，后续支持批量添加决议、效果预设</p></div></div>
                     <div id="loc" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>本地化</h3><p style="color:#999;margin-top:10px;">本地化编辑器正在开发中，后续支持一键导出yml语言文件</p></div></div>
-                    <div id="export" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>导出mod</h3><p style="color:#999;">导出后直接放进HOI4 mod文件夹即可游玩</p></div></div>
+                    <div id="export" class="tab" style="display:none;"><div style="background:#fff;padding:20px;border-radius:10px;"><h3>导出mod</h3><p style="color:#999;margin:10px 0 15px;">导出后直接放进HOI4 mod文件夹即可游玩</p><button class="btn sm" onclick="exportMod()">导出mod文件</button></div></div>
                 </div>
             </div>
         </div>
@@ -380,6 +380,15 @@
             document.getElementById('projectListPage').style.display='block';
             document.getElementById('showUser').textContent = savedUser;
             renderProjects();
+        }
+        function exportMod() {
+            const modName = document.getElementById('projName').value || '我的Mod';
+            const content = `name="${modName}"\nversion="1.0.0"\nsupported_version="1.19.*"\n`;
+            const blob = new Blob([content], {type:'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'descriptor.mod';
+            a.click();
         }
     </script>
 </body>
