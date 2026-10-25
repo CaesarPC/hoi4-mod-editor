@@ -146,7 +146,7 @@
             <h3 style="font-size:14px;color:#666;margin:25px 0 12px;">最近打开</h3>
             <div id="recentBar"></div>
             <div style="display:flex;gap:10px;align-items:center;margin:20px 0;">
-                <input placeholder="搜项目名 / 国家TAG / mod基础..." style="flex:1;">
+                <input id="searchInput" placeholder="搜项目名 / 国家TAG / mod基础..." style="flex:1;" oninput="filterProjects()">
                 <span style="color:#666;font-size:14px;">排序：</span>
                 <button class="btn sec sm">最近编辑</button>
             </div>
@@ -240,6 +240,14 @@
             <button class="btn sm" onclick="addCountry()">确定</button>
         </div>
     </div>
+    <div class="modal" id="delProjModal">
+        <h3 style="margin-bottom:10px;">删除项目</h3>
+        <p style="color:#666;margin-bottom:20px;">删除后项目所有内容将永久丢失，无法恢复，确认删除？</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn sec sm" onclick="closeDelProjModal()">取消</button>
+            <button class="btn sm" style="background:#c0392b;" onclick="confirmDelProj()">确认删除</button>
+        </div>
+    </div>
 
     <script>
         let projects = [];
@@ -285,12 +293,41 @@
                 const tags = Array.isArray(p.tags) ? p.tags : [];
                 const card = document.createElement('div');
                 card.className = 'proj-card';
-                card.style = 'background:#fff;border-radius:12px;padding:20px;cursor:pointer;transition: all 0.15s;';
-                card.innerHTML = '<div style="font-size:17px;font-weight:bold;margin-bottom:4px;">'+p.name+'</div><div style="color:#999;font-size:12px;">'+tags.join('、')+'</div>';
+                card.dataset.name = p.name.toLowerCase();
+                card.style = 'background:#fff;border-radius:12px;padding:20px;cursor:pointer;transition: all 0.15s;position:relative;';
+                card.innerHTML = '<div style="font-size:17px;font-weight:bold;margin-bottom:4px;">'+p.name+'</div><div style="color:#999;font-size:12px;">'+tags.join('、')+'</div><div style="position:absolute;bottom:12px;right:12px;color:#c0392b;font-size:13px;cursor:pointer;" class="del-btn">删除</div>';
                 card.onmouseenter = () => card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
                 card.onmouseleave = () => card.style.boxShadow = 'none';
-                card.onclick = () => openEditor(idx);
+                card.onclick = (e) => {
+                    if (e.target.classList.contains('del-btn')) return;
+                    openEditor(idx);
+                };
+                card.querySelector('.del-btn').onclick = (e) => {
+                    e.stopPropagation();
+                    pendingDelIdx = idx;
+                    document.getElementById('modalMask').style.display='block';
+                    document.getElementById('delProjModal').style.display='block';
+                };
                 projGrid.insertBefore(card, projGrid.firstChild);
+            });
+        }
+        let pendingDelIdx = -1;
+        function closeDelProjModal() {
+            document.getElementById('modalMask').style.display='none';
+            document.getElementById('delProjModal').style.display='none';
+            pendingDelIdx = -1;
+        }
+        function confirmDelProj() {
+            if (pendingDelIdx >=0) {
+                projects.splice(pendingDelIdx, 1);
+                localStorage.setItem('hoi_projects', JSON.stringify(projects));
+            }
+            closeDelProjModal(); renderProjects();
+        }
+        function filterProjects() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.proj-card').forEach(card => {
+                card.style.display = card.dataset.name.includes(q) ? 'block' : 'none';
             });
         }
         function showProjModal() { document.getElementById('modalMask').style.display='block'; document.getElementById('projModal').style.display='block'; }
@@ -366,12 +403,16 @@
             document.getElementById('countryModal').style.display='none';
         }
         function addCountry() {
-            const t = document.getElementById('ncTag').value.toUpperCase();
-            const n = document.getElementById('ncName').value;
-            if (!t || !n) { alert('填全内容'); return; }
+            const t = document.getElementById('ncTag').value.trim().toUpperCase();
+            const n = document.getElementById('ncName').value.trim();
+            if (!t || !n) { alert('请填全国家代码和名称'); closeCountryModal(); return; }
+            if (!curProject.countries) curProject.countries = [];
             curProject.countries.push({tag:t, name:n});
             localStorage.setItem('hoi_projects', JSON.stringify(projects));
-            closeCountryModal(); renderCountrySelect();
+            document.getElementById('ncTag').value = '';
+            document.getElementById('ncName').value = '';
+            closeCountryModal();
+            renderCountrySelect();
         }
         document.querySelectorAll('.item').forEach(item => {
             item.onclick = () => {
