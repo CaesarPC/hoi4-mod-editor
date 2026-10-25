@@ -150,8 +150,7 @@
                 <span style="color:#666;font-size:14px;">排序：</span>
                 <button class="btn sec sm">最近编辑</button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px;">
-                <div id="projCards"></div>
+            <div id="projGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px;margin-top:20px;">
                 <div style="border:2px dashed #d0c8b8;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;background:#fff;" onclick="showProjModal()">
                     <div style="font-size:36px;color:#b0a898;">+</div>
                 </div>
@@ -264,25 +263,34 @@
         function renderProjects() {
             document.getElementById('statProj').textContent = projects.length;
             const recentBar = document.getElementById('recentBar');
-            const projCards = document.getElementById('projCards');
+            const projGrid = document.getElementById('projGrid');
             recentBar.innerHTML = '';
-            projCards.innerHTML = '';
+            // 移除旧的项目卡片，保留两个虚线块
+            projGrid.querySelectorAll('.proj-card').forEach(c => c.remove());
+            if (projects.length === 0) return;
+            // 最近打开只显示最新编辑的1个项目
+            const lastP = projects[projects.length - 1];
+            if (lastP && lastP.name) {
+                const tags = Array.isArray(lastP.tags) ? lastP.tags : [];
+                const countries = Array.isArray(lastP.countries) ? lastP.countries : [];
+                const bar = document.createElement('div');
+                bar.style = 'background:#fff;border:1px solid #e6dcc8;border-radius:12px;padding:20px;display:flex;justify-content:space-between;align-items:center;';
+                bar.innerHTML = '<div><div style="color:#999;font-size:13px;margin-bottom:6px;">● 编辑中 · 刚刚</div><div style="font-size:22px;font-weight:bold;margin-bottom:8px;">'+lastP.name+'</div><div style="color:#999;font-size:13px;">'+tags.join('、')+' · '+countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
+                bar.querySelector('button').onclick = () => openEditor(projects.length - 1);
+                recentBar.appendChild(bar);
+            }
+            // 所有项目独立卡片，插到grid最前面
             projects.forEach((p, idx) => {
                 if (!p || !p.name) return;
                 const tags = Array.isArray(p.tags) ? p.tags : [];
-                const countries = Array.isArray(p.countries) ? p.countries : [];
-                // 最近打开条
-                const bar = document.createElement('div');
-                bar.style = 'background:#fff;border:1px solid #e6dcc8;border-radius:12px;padding:20px;display:flex;justify-content:space-between;align-items:center;';
-                bar.innerHTML = '<div><div style="color:#999;font-size:13px;margin-bottom:6px;">● 编辑中 · 刚刚</div><div style="font-size:22px;font-weight:bold;margin-bottom:8px;">'+p.name+'</div><div style="color:#999;font-size:13px;">'+tags.join('、')+' · '+countries.length+'个国家</div></div><button class="btn sm">继续编辑</button>';
-                bar.querySelector('button').onclick = () => openEditor(idx);
-                recentBar.appendChild(bar);
-                // 底部网格小卡片
                 const card = document.createElement('div');
-                card.style = 'background:#fff;border-radius:12px;padding:20px;cursor:pointer;';
+                card.className = 'proj-card';
+                card.style = 'background:#fff;border-radius:12px;padding:20px;cursor:pointer;transition: all 0.15s;';
                 card.innerHTML = '<div style="font-size:17px;font-weight:bold;margin-bottom:4px;">'+p.name+'</div><div style="color:#999;font-size:12px;">'+tags.join('、')+'</div>';
+                card.onmouseenter = () => card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                card.onmouseleave = () => card.style.boxShadow = 'none';
                 card.onclick = () => openEditor(idx);
-                projCards.appendChild(card);
+                projGrid.insertBefore(card, projGrid.firstChild);
             });
         }
         function showProjModal() { document.getElementById('modalMask').style.display='block'; document.getElementById('projModal').style.display='block'; }
